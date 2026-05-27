@@ -1,0 +1,1 @@
+# Zadanie polegało na wykonaniu podstawowych operacji z użyciem `Git` tworzenie repozytorium, tworzenie nowego pliku `.md`, dodanie pliku do stageing, commit, oraz stworzenie `Pull Request`
