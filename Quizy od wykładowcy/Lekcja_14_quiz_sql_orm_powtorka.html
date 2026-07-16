@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — SQL & ORM powtórka | DS02-05-26</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1117;--surface:#161b22;--card:#1c2128;--border:#30363d;--border2:#21262d;
+    --text:#e6edf3;--muted:#7d8590;
+    --blue:#79c0ff;--blue-bg:rgba(121,192,255,.08);--blue-bd:rgba(121,192,255,.25);
+    --green:#3fb950;--green-bg:rgba(63,185,80,.10);--green-bd:rgba(63,185,80,.30);
+    --red:#f85149;--red-bg:rgba(248,81,73,.10);--red-bd:rgba(248,81,73,.30);
+    --purple:#d2a8ff;--purple-bg:rgba(210,168,255,.08);--purple-bd:rgba(210,168,255,.25);
+    --amber-bd:rgba(227,179,65,.30);
+    --kw:#ff7b72;--fn:#d2a8ff;--str:#a5d6ff;--num:#79c0ff;--cmt:#8b949e;--tbl:#ffa657;
+    --mono:'JetBrains Mono',monospace;--sans:'Inter',system-ui,sans-serif;
+  }
+  html{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+  body{display:flex;flex-direction:column;align-items:center;padding:36px 16px 60px}
+
+  .hdr{text-align:center;margin-bottom:24px}
+  .hdr-eye{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .hdr-title{font-size:26px;font-weight:700;margin-bottom:6px}
+  .hdr-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+  .hdr-pills{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  .pill{padding:3px 12px;border-radius:99px;font-size:12px;font-weight:600;font-family:var(--mono)}
+  .pill-sql{background:var(--blue-bg);border:1px solid var(--blue-bd);color:var(--blue)}
+  .pill-orm{background:var(--purple-bg);border:1px solid var(--purple-bd);color:var(--purple)}
+
+  .prog-wrap{width:100%;max-width:720px;margin-bottom:20px}
+  .prog-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:7px}
+  .prog-track{height:3px;background:var(--border);border-radius:99px;overflow:hidden}
+  .prog-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+
+  .card{width:100%;max-width:720px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .q-head{padding:20px 24px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:flex-start;gap:14px}
+  .q-num{flex-shrink:0;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600}
+  .q-num.sql{background:var(--blue-bg);border:1px solid var(--blue-bd);color:var(--blue)}
+  .q-num.orm{background:var(--purple-bg);border:1px solid var(--purple-bd);color:var(--purple)}
+  .q-right{}
+  .q-tag{display:inline-block;margin-bottom:6px;padding:2px 9px;border-radius:4px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+  .q-tag.sql{background:var(--blue-bg);border:1px solid var(--blue-bd);color:var(--blue)}
+  .q-tag.orm{background:var(--purple-bg);border:1px solid var(--purple-bd);color:var(--purple)}
+  .q-txt{font-size:15px;line-height:1.65;color:var(--text);font-weight:500}
+  .q-txt code{font-family:var(--mono);font-size:13px;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px}
+
+  .code-wrap{padding:14px 24px 0}
+  .code-box{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.75;overflow-x:auto;white-space:pre}
+  .kw{color:var(--kw);font-weight:600}.fn{color:var(--fn)}.str{color:var(--str)}.num{color:var(--num)}.cmt{color:var(--cmt);font-style:italic}.tbl{color:var(--tbl)}.hl{background:rgba(121,192,255,.12);border-radius:3px;padding:0 3px}
+
+  .opts{padding:18px 24px;display:flex;flex-direction:column;gap:9px}
+  .opt{display:flex;align-items:center;gap:12px;padding:12px 15px;background:var(--surface);border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:13.5px;line-height:1.5;color:var(--text);transition:border-color .12s,background .12s,transform .1s;text-align:left;width:100%}
+  .opt:hover:not(.dis){border-color:var(--blue);background:var(--blue-bg);transform:translateX(2px)}
+  .opt.ok{border-color:var(--green-bd)!important;background:var(--green-bg)!important}
+  .opt.ng{border-color:var(--red-bd)!important;background:var(--red-bg)!important}
+  .opt.dis{cursor:default}
+  .opt-l{flex-shrink:0;width:26px;height:26px;border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--muted);transition:all .12s}
+  .opt:hover:not(.dis) .opt-l{border-color:var(--blue);color:var(--blue);background:var(--blue-bg)}
+  .opt.ok .opt-l{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+  .opt.ng .opt-l{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+  .opt-mono{font-family:var(--mono);font-size:12.5px}
+
+  .fb{margin:0 24px 18px;padding:12px 15px;border-radius:8px;font-size:13px;line-height:1.6;display:none;gap:10px;align-items:flex-start}
+  .fb.show{display:flex}
+  .fb.ok{background:var(--green-bg);border:1px solid var(--green-bd);color:#7ee787}
+  .fb.ng{background:var(--red-bg);border:1px solid var(--red-bd);color:#ffa198}
+  .fb-icon{font-size:15px;flex-shrink:0;padding-top:1px}
+
+  .card-foot{padding:14px 24px;border-top:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center}
+  .foot-hint{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .btn{padding:10px 24px;border-radius:8px;border:none;cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;background:#388bfd;color:#fff;transition:opacity .12s,transform .1s}
+  .btn:hover{opacity:.85} .btn:active{transform:scale(.97)} .btn:disabled{opacity:.3;cursor:default}
+
+  #sc{display:none;width:100%;max-width:720px}
+  .sc-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:40px 32px;text-align:center}
+  .sc-ring{width:130px;height:130px;margin:0 auto 22px;position:relative}
+  .sc-ring svg{transform:rotate(-90deg)}
+  .sc-bg{fill:none;stroke:var(--border);stroke-width:9}
+  .sc-arc{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1)}
+  .sc-mid{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  .sc-big{font-size:30px;font-weight:700;font-family:var(--mono)} .sc-den{font-size:13px;color:var(--muted);font-family:var(--mono)}
+  .sc-lbl{font-size:20px;font-weight:700;margin-bottom:7px} .sc-sub{font-size:13.5px;color:var(--muted);margin-bottom:26px}
+  .sc-grid{display:grid;grid-template-columns:repeat(15,1fr);gap:5px;margin-bottom:26px}
+  .sc-dot{height:6px;border-radius:99px;background:var(--green)}.sc-dot.ng{background:var(--red)}
+  .sc-breakdown{display:flex;justify-content:center;gap:24px;margin-bottom:24px}
+  .sc-stat{text-align:center}
+  .sc-stat-n{font-size:22px;font-weight:700;font-family:var(--mono)}
+  .sc-stat-l{font-size:11px;color:var(--muted);margin-top:2px}
+  .sc-stat.sql .sc-stat-n{color:var(--blue)}
+  .sc-stat.orm .sc-stat-n{color:var(--purple)}
+  .sc-stat.total .sc-stat-n{color:var(--green)}
+  .rv{text-align:left;margin-bottom:26px}
+  .rv-item{padding:11px 15px;border-radius:8px;margin-bottom:7px;border:1px solid var(--red-bd);background:var(--surface);font-size:12.5px;display:flex;gap:10px;align-items:flex-start}
+  .rv-badge{flex-shrink:0;padding:1px 7px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:600;text-transform:uppercase;margin-top:1px}
+  .rv-badge.sql{background:var(--blue-bg);color:var(--blue)}
+  .rv-badge.orm{background:var(--purple-bg);color:var(--purple)}
+  .rv-txt{line-height:1.55} .rv-ok{color:var(--green);font-size:11px;font-family:var(--mono);margin-top:4px}
+  .btn-rs{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:11px 28px;border-radius:8px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:border-color .12s}
+  .btn-rs:hover{border-color:var(--blue)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-eye">DS02-05-26 · LearnIT · Michał Szłapa</div>
+  <div class="hdr-title">Quiz Powtórkowy — SQL & ORM</div>
+  <div class="hdr-sub">15 pytań · Lekcje 13 i 14 · sprawdź czy pamiętasz</div>
+  <div class="hdr-pills">
+    <span class="pill pill-sql">SQL — 5 pytań</span>
+    <span class="pill pill-orm">ORM SQLAlchemy — 10 pytań</span>
+  </div>
+</div>
+
+<div class="prog-wrap">
+  <div class="prog-meta"><span id="plbl">Pytanie 1 z 15</span><span id="psco"></span></div>
+  <div class="prog-track"><div class="prog-fill" id="pfill" style="width:4%"></div></div>
+</div>
+
+<div class="card" id="qcard">
+  <div class="q-head">
+    <div class="q-num" id="qnum">1</div>
+    <div class="q-right">
+      <div class="q-tag" id="qtag"></div>
+      <div class="q-txt" id="qtxt"></div>
+    </div>
+  </div>
+  <div class="code-wrap" id="cwrap" style="display:none"><div class="code-box" id="cbox"></div></div>
+  <div class="opts" id="opts"></div>
+  <div class="fb" id="fb"><span class="fb-icon" id="fbico"></span><span id="fbtxt"></span></div>
+  <div class="card-foot">
+    <span class="foot-hint" id="fhint"></span>
+    <button class="btn" id="nbtn" disabled onclick="next()">Dalej →</button>
+  </div>
+</div>
+
+<div id="sc">
+  <div class="sc-card">
+    <div class="sc-ring">
+      <svg width="130" height="130" viewBox="0 0 130 130">
+        <circle class="sc-bg" cx="65" cy="65" r="56"/>
+        <circle class="sc-arc" id="sarc" cx="65" cy="65" r="56" stroke-dasharray="351.9" stroke-dashoffset="351.9"/>
+      </svg>
+      <div class="sc-mid"><div class="sc-big" id="sfin">0</div><div class="sc-den">/ 15</div></div>
+    </div>
+    <div class="sc-lbl" id="slbl"></div>
+    <div class="sc-sub" id="ssub"></div>
+    <div class="sc-breakdown">
+      <div class="sc-stat sql"><div class="sc-stat-n" id="sql-score">0/5</div><div class="sc-stat-l">SQL</div></div>
+      <div class="sc-stat orm"><div class="sc-stat-n" id="orm-score">0/10</div><div class="sc-stat-l">ORM</div></div>
+      <div class="sc-stat total"><div class="sc-stat-n" id="tot-score">0/15</div><div class="sc-stat-l">Łącznie</div></div>
+    </div>
+    <div class="sc-grid" id="sdots"></div>
+    <div class="rv" id="rvlist"></div>
+    <button class="btn-rs" onclick="restart()">↺ Spróbuj ponownie</button>
+  </div>
+</div>
+
+<script>
+const Q = [
+  // ── SQL (1–5) ────────────────────────────────────────────────────────
+  {
+    type:'sql', tag:'SQL — JOIN',
+    txt:'Co zwróci INNER JOIN gdy żaden wiersz z prawej tabeli nie pasuje do wiersza z lewej?',
+    code:`<span class="kw">SELECT</span> c.name, o.amount
+<span class="kw">FROM</span> <span class="tbl">customers</span> c
+<span class="kw">INNER JOIN</span> <span class="tbl">orders</span> o <span class="kw">ON</span> c.id = o.customer_id`,
+    opts:[
+      {t:'Wiersz z lewej tabeli z NULL w kolumnach prawej',m:false},
+      {t:'Wiersz jest pomijany — INNER JOIN zwraca tylko dopasowania',m:false},
+      {t:'Błąd SQL — brak dopasowania przerywa zapytanie',m:false},
+      {t:'Pusty wiersz (wszystkie kolumny = pustym stringiem)',m:false},
+    ],
+    ok:1,
+    exp:'INNER JOIN zwraca TYLKO wiersze które mają dopasowanie w OBU tabelach. Klient bez zamówień zostaje pominięty. To odróżnia go od LEFT JOIN — który zachowuje wszystkich klientów i daje NULL tam gdzie brakuje zamówienia.'
+  },
+  {
+    type:'sql', tag:'SQL — GROUP BY',
+    txt:'Które zapytanie spowoduje błąd? (tabela <code>sales</code>: product, category, revenue)',
+    code:null,
+    opts:[
+      {t:'SELECT category, SUM(revenue) FROM sales GROUP BY category',m:true},
+      {t:'SELECT category, COUNT(*), AVG(revenue) FROM sales GROUP BY category',m:true},
+      {t:'SELECT category, product, SUM(revenue) FROM sales GROUP BY category',m:true},
+      {t:'SELECT category, MAX(revenue) AS max_rev FROM sales GROUP BY category',m:true},
+    ],
+    ok:2,
+    exp:'Reguła GROUP BY: każda kolumna w SELECT musi być albo w GROUP BY, albo wewnątrz agregatu (SUM/COUNT/AVG/MIN/MAX). W opcji C kolumna `product` nie jest ani w GROUP BY, ani w żadnej funkcji agregującej → błąd!'
+  },
+  {
+    type:'sql', tag:'SQL — HAVING vs WHERE',
+    txt:'Co robi <code>HAVING</code> i czym różni się od <code>WHERE</code>?',
+    code:`<span class="kw">SELECT</span> category, <span class="fn">SUM</span>(revenue) <span class="kw">AS</span> total
+<span class="kw">FROM</span> <span class="tbl">sales</span>
+<span class="kw">WHERE</span> category != <span class="str">'zwroty'</span>
+<span class="kw">GROUP BY</span> category
+<span class="hl"><span class="kw">HAVING</span> <span class="fn">SUM</span>(revenue) > <span class="num">1000</span></span>`,
+    opts:[
+      {t:'HAVING i WHERE są wymienne — różnią się tylko miejscem w składni',m:false},
+      {t:'HAVING filtruje kolumny, WHERE filtruje wiersze',m:false},
+      {t:'HAVING filtruje grupy PO GROUP BY — jedyne miejsce na COUNT/SUM w warunku',m:false},
+      {t:'HAVING zastępuje WHERE gdy używamy GROUP BY',m:false},
+    ],
+    ok:2,
+    exp:'Kolejność: FROM → WHERE (filtr wierszy, przed grupowaniem) → GROUP BY → HAVING (filtr grup, po agregacji). WHERE nie "widzi" SUM/COUNT bo grupowanie jeszcze nie nastąpiło. HAVING to JEDYNE miejsce gdzie możesz filtrować po wartości agregatu.'
+  },
+  {
+    type:'sql', tag:'SQL — NULL',
+    txt:'Jak poprawnie wybrać klientów, którzy NIE podali nazwy firmy (kolumna <code>Company</code>)?',
+    code:null,
+    opts:[
+      {t:'WHERE Company = NULL',m:true},
+      {t:'WHERE Company = \'\'',m:true},
+      {t:'WHERE Company IS NULL',m:true},
+      {t:'WHERE NOT Company',m:true},
+    ],
+    ok:2,
+    exp:'NULL to brak wartości — nie możesz go porównywać przez = ani !=. Jedyna poprawna składnia to IS NULL (brak wartości) lub IS NOT NULL (ma wartość). Company = NULL zawsze zwraca FALSE — nawet gdy Company rzeczywiście jest NULL!'
+  },
+  {
+    type:'sql', tag:'SQL — COALESCE',
+    txt:'Klient Maria nie ma żadnych zamówień. Po LEFT JOIN jaka wartość pojawi się dla Marii dzięki <code>COALESCE(SUM(o.total), 0)</code>?',
+    code:`<span class="kw">SELECT</span> c.name,
+       <span class="hl"><span class="fn">COALESCE</span>(<span class="fn">SUM</span>(o.total), <span class="num">0</span>)</span> <span class="kw">AS</span> suma
+<span class="kw">FROM</span> <span class="tbl">customers</span> c
+<span class="kw">LEFT JOIN</span> <span class="tbl">orders</span> o <span class="kw">ON</span> c.id = o.customer_id
+<span class="kw">GROUP BY</span> c.id, c.name`,
+    opts:[
+      {t:'NULL — Maria nie ma zamówień, więc SUM zwraca NULL',m:false},
+      {t:'0 — COALESCE zamienia NULL na 0',m:false},
+      {t:'Maria w ogóle nie pojawi się w wynikach',m:false},
+      {t:'Błąd — SUM() nie może operować na NULL po LEFT JOIN',m:false},
+    ],
+    ok:1,
+    exp:'LEFT JOIN zachowuje Marię w wynikach, ale kolumny z tabeli orders mają NULL. SUM(NULL) = NULL. Dopiero COALESCE(NULL, 0) = 0. Klasyczny trick: LEFT JOIN + COALESCE = "wszyscy klienci, nawet bez zamówień, z 0 zamiast NULL".'
+  },
+
+  // ── ORM (6–15) ───────────────────────────────────────────────────────
+  {
+    type:'orm', tag:'ORM — Base',
+    txt:'Co to jest <code>Base = declarative_base()</code> w SQLAlchemy?',
+    code:null,
+    opts:[
+      {t:'Obiekt połączenia z bazą danych (engine)',m:false},
+      {t:'Klasa-rejestr modeli — każda klasa dziedzicząca po Base staje się tabelą',m:false},
+      {t:'Fabryka sesji do operacji CRUD',m:false},
+      {t:'Klasa migracji schematu (jak Alembic)',m:false},
+    ],
+    ok:1,
+    exp:'Base to "spis treści" twoich modeli. Gdy piszesz class Product(Base), SQLAlchemy rejestruje tę klasę jako przyszłą tabelę. Base.metadata.create_all(engine) przegląda rejestr i dla każdej klasy wykonuje CREATE TABLE IF NOT EXISTS.'
+  },
+  {
+    type:'orm', tag:'ORM — Session',
+    txt:'Jak działa <code>Session</code> w SQLAlchemy? Wybierz najlepszy opis.',
+    code:null,
+    opts:[
+      {t:'Trwałe połączenie TCP otwarte przez cały czas życia aplikacji',m:false},
+      {t:'Tymczasowy obszar roboczy — add() wkłada do "koszyka", commit() zatwierdza do bazy',m:false},
+      {t:'Obiekt zarządzający pulą połączeń (connection pool)',m:false},
+      {t:'Klasa opisująca schemat tabel (jak deklaracja kolumn)',m:false},
+    ],
+    ok:1,
+    exp:'Session = koszyk zakupowy. session.add(p) → dane tylko w pamięci Python. session.commit() → dane idą do bazy. session.rollback() → cofa niezatwierdzone zmiany. session.close() → zwalnia połączenie do puli. sessionmaker(bind=engine) tworzy fabrykę sesji.'
+  },
+  {
+    type:'orm', tag:'ORM — ForeignKey',
+    txt:'Po której stronie relacji One-to-Many umieszczamy <code>ForeignKey</code>?',
+    code:`<span class="cmt">-- Autor ma wiele Książek</span>
+<span class="kw">class</span> Author(Base): ...   <span class="cmt"># "jeden"</span>
+<span class="kw">class</span> Book(Base):   ...   <span class="cmt"># "wiele"</span>`,
+    opts:[
+      {t:'Po stronie "jeden" (w klasie Author)',m:false},
+      {t:'Po stronie "wiele" (w klasie Book)',m:false},
+      {t:'W obu klasach jednocześnie',m:false},
+      {t:'W osobnej tabeli asocjacyjnej (jak N:M)',m:false},
+    ],
+    ok:1,
+    exp:'ForeignKey zawsze stoi przy tym kto ma "wiele". Jeden autor ma wiele książek → FK author_id jest w tabeli books, nie authors. Reguła: kolumna FK wskazuje "kto jest moim rodzicem". W klasie Author jest tylko relationship() — nawigator w Pythonie, nie kolumna w bazie.'
+  },
+  {
+    type:'orm', tag:'ORM — Query',
+    txt:'Co zwróci poniższy kod — lista produktów czy coś innego?',
+    code:`wynik = session.query(<span class="tbl">Product</span>).filter(<span class="tbl">Product</span>.price > <span class="num">100</span>)
+<span class="fn">print</span>(<span class="fn">type</span>(wynik))`,
+    opts:[
+      {t:'Lista obiektów Product spełniających warunek',m:false},
+      {t:'Obiekt Query — SQL jeszcze NIE jest wysłany do bazy',m:false},
+      {t:'Liczbę pasujących rekordów',m:false},
+      {t:'DataFrame z wynikami',m:false},
+    ],
+    ok:1,
+    exp:'Query jest "leniwy" — SQL idzie do bazy dopiero przy: .all() (lista), .first() (jeden lub None), .count() (liczba), .one() (jeden, błąd jeśli 0 lub >1). Bez tego dostajesz <sqlalchemy.orm.query.Query object>, nie wyniki. To jeden z najczęstszych błędów!'
+  },
+  {
+    type:'orm', tag:'ORM — Lazy Loading',
+    txt:'Co to jest Lazy Loading i dlaczego bywa problemem?',
+    code:null,
+    opts:[
+      {t:'Ładowanie danych w tle podczas startu aplikacji — może spowolnić boot',m:false},
+      {t:'Powiązane dane ładowane dopiero gdy ich dotkniesz → N+1 problem w pętlach',m:false},
+      {t:'Cachowanie wyników zapytania — dobre domyślnie, złe przy dużych danych',m:false},
+      {t:'Pobieranie danych strumieniowo (streaming) zamiast jednorazowo',m:false},
+    ],
+    ok:1,
+    exp:'Domyślnie SQLAlchemy używa lazy loading. session.query(Author).all() → pobiera autorów, ale NIE książki. Gdy dotkniesz author.books w pętli → osobny SELECT dla KAŻDEGO autora. 1000 autorów = 1001 zapytań (N+1 problem). Rozwiązanie: joinedload(Author.books) → jeden SQL z JOIN.'
+  },
+  {
+    type:'orm', tag:'ORM — @validates',
+    txt:'Co robi dekorator <code>@validates(\'salary\')</code> na metodzie w modelu?',
+    code:`<span class="kw">@</span><span class="fn">validates</span>(<span class="str">'salary'</span>)
+<span class="kw">def</span> <span class="fn">validate_salary</span>(self, key, value):
+    <span class="kw">if</span> value < <span class="num">0</span>: <span class="kw">raise</span> ValueError(<span class="str">'ujemna!'</span>)
+    <span class="kw">return</span> value`,
+    opts:[
+      {t:'Automatycznie szyfruje pole salary przy zapisie do bazy',m:false},
+      {t:'Wywołuje funkcję zanim SQLAlchemy zapisze wartość — może ją odrzucić lub przetworzyć',m:false},
+      {t:'Tworzy indeks na kolumnie salary dla szybszego wyszukiwania',m:false},
+      {t:'Ustawia domyślną wartość pola gdy nie podano argumentu',m:false},
+    ],
+    ok:1,
+    exp:'@validates("pole") oznacza funkcję wywoływaną przy każdym przypisaniu do pola — zarówno przy tworzeniu jak i modyfikacji. Funkcja musi zwrócić wartość (może ją przetworzyć: strip(), title()) lub rzucić wyjątek (ValueError). UWAGA: pomijana przy bulk update (query.update({...}))!'
+  },
+  {
+    type:'orm', tag:'ORM — commit vs rollback',
+    txt:'Co stanie się z danymi po <code>session.add(p)</code> + <code>session.close()</code> BEZ <code>session.commit()</code>?',
+    code:null,
+    opts:[
+      {t:'Dane są zapisane — add() automatycznie commituje',m:false},
+      {t:'Dane znikają — nigdy nie trafiły do bazy, tylko do pamięci Python',m:false},
+      {t:'Dane zapisane tymczasowo, zatwierdzone przy następnym otwarciu sesji',m:false},
+      {t:'Błąd — nie można zamknąć sesji bez wcześniejszego commitu',m:false},
+    ],
+    ok:1,
+    exp:'session.add() tylko dodaje obiekt do sesji (do pamięci Pythona). SQL INSERT idzie do bazy DOPIERO po session.commit(). Bez commitu dane znikają przy session.close(). To jeden z najczęstszych błędów! Zawsze: try → add → commit → except → rollback → finally → close.'
+  },
+  {
+    type:'orm', tag:'ORM — flush vs commit',
+    txt:'Jaka jest różnica między <code>session.flush()</code> a <code>session.commit()</code>?',
+    code:null,
+    opts:[
+      {t:'flush() jest szybszy, commit() zapisuje trwale — oba kończą transakcję',m:false},
+      {t:'flush() wysyła SQL ale transakcja otwarta (można rollback); commit() zamyka transakcję',m:false},
+      {t:'flush() działa tylko dla INSERT, commit() dla INSERT/UPDATE/DELETE',m:false},
+      {t:'Brak różnicy — są synonimami w SQLAlchemy 2.0',m:false},
+    ],
+    ok:1,
+    exp:'flush() → SQL idzie do bazy, transakcja OTWARTA → możesz rollback(). Dane niewidoczne dla innych sesji. Używaj gdy potrzebujesz ID (nadanego przez bazę) przed zakończeniem wszystkich operacji. commit() → SQL idzie do bazy, transakcja ZAMKNIĘTA → nie możesz cofnąć. Dane widoczne dla wszystkich.'
+  },
+  {
+    type:'orm', tag:'ORM — N:M relacja',
+    txt:'Do czego służy <code>secondary=student_course</code> w <code>relationship()</code>?',
+    code:`student_course = <span class="fn">Table</span>(<span class="str">'student_course'</span>, Base.metadata,
+    <span class="fn">Column</span>(<span class="str">'student_id'</span>, <span class="fn">ForeignKey</span>(<span class="str">'students.id'</span>)),
+    <span class="fn">Column</span>(<span class="str">'course_id'</span>,  <span class="fn">ForeignKey</span>(<span class="str">'courses.id'</span>)),
+)`,
+    opts:[
+      {t:'Wskazuje pomocniczy model do walidacji danych',m:false},
+      {t:'Wskazuje tabelę pośrednią dla relacji N:M — SQLAlchemy zarządza nią automatycznie',m:false},
+      {t:'Ustawia wtórny (secondary) indeks na tabeli',m:false},
+      {t:'Definiuje drugą stronę relacji (zastępuje back_populates)',m:false},
+    ],
+    ok:1,
+    exp:'W relacji N:M (Student ↔ Course) potrzebna jest tabela pośrednia (student_course) z dwoma ForeignKey. secondary=student_course mówi SQLAlchemy żeby używał tej tabeli do przechowywania par. Dodawanie relacji wygląda jak Python: s.courses.append(c) → automatyczny INSERT do student_course.'
+  },
+  {
+    type:'orm', tag:'ORM — bulk insert',
+    txt:'Które podejście jest NAJSZYBSZE do wstawienia 10 000 rekordów?',
+    code:null,
+    opts:[
+      {t:'Pętla: for r in data: session.add(r); session.commit() — każdy osobno',m:false},
+      {t:'session.add_all(lista_10000_obiektów) + jeden session.commit() na końcu',m:false},
+      {t:'df.to_sql("tabela", engine, if_exists="append") — bezpośredni bulk INSERT',m:false},
+      {t:'Wszystkie metody mają identyczną wydajność — SQL jest taki sam',m:false},
+    ],
+    ok:2,
+    exp:'df.to_sql() jest najszybsze — omija ORM całkowicie i wysyła jeden bulk INSERT przez silnik SQL. add_all() + 1 commit jest dobry gdy potrzebujesz walidatorów @validates (ale jest wolniejsze). Pętla z commit() na każdym rekordzie jest najwolniejsza — 10 000 round-tripów do dysku. Benchmark z lekcji: różnica 10-100×.'
+  },
+];
+
+let cur=0, score=0, answers=[], done=false;
+
+function typeStyle(type) {
+  return type === 'sql'
+    ? {num:'sql', tag:'sql', fillColor:'linear-gradient(90deg,#388bfd,#79c0ff)'}
+    : {num:'orm', tag:'orm', fillColor:'linear-gradient(90deg,#8957e5,#d2a8ff)'};
+}
+
+function render() {
+  const q = Q[cur];
+  const s = typeStyle(q.type);
+
+  document.getElementById('qnum').className = 'q-num ' + s.num;
+  document.getElementById('qnum').textContent = cur + 1;
+  document.getElementById('qtag').className = 'q-tag ' + s.tag;
+  document.getElementById('qtag').textContent = q.tag;
+  document.getElementById('qtxt').innerHTML = q.txt;
+
+  const cw = document.getElementById('cwrap');
+  if (q.code) { cw.style.display = 'block'; document.getElementById('cbox').innerHTML = q.code; }
+  else cw.style.display = 'none';
+
+  const ol = document.getElementById('opts'); ol.innerHTML = '';
+  ['A','B','C','D'].forEach((l,i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.onclick = () => pick(i);
+    b.innerHTML = `<span class="opt-l">${l}</span><span class="${q.opts[i].m?'opt-mono':''}">${q.opts[i].t}</span>`;
+    ol.appendChild(b);
+  });
+
+  document.getElementById('fb').className = 'fb';
+  document.getElementById('fhint').textContent = `${cur+1}/15`;
+  const btn = document.getElementById('nbtn');
+  btn.disabled = true;
+  btn.textContent = cur < 14 ? 'Dalej →' : 'Zobacz wyniki';
+  done = false;
+  prog(s.fillColor);
+}
+
+function pick(i) {
+  if (done) return; done = true;
+  const q = Q[cur], isOk = i === q.ok;
+  if (isOk) score++;
+  answers.push(i);
+
+  document.querySelectorAll('.opt').forEach((b, j) => {
+    b.classList.add('dis');
+    if (j === q.ok) b.classList.add('ok');
+    else if (j === i && !isOk) b.classList.add('ng');
+  });
+
+  const fb = document.getElementById('fb');
+  fb.className = 'fb show ' + (isOk ? 'ok' : 'ng');
+  document.getElementById('fbico').textContent = isOk ? '✓' : '✗';
+  document.getElementById('fbtxt').textContent = (isOk ? 'Dobrze! ' : 'Niepoprawnie. ') + q.exp;
+  document.getElementById('nbtn').disabled = false;
+  prog(typeStyle(q.type).fillColor);
+}
+
+function next() { if (!done) return; cur++; cur >= Q.length ? showScore() : render(); }
+
+function prog(fillColor) {
+  const pct = ((cur + (done ? 1 : 0)) / Q.length) * 100;
+  const fill = document.getElementById('pfill');
+  fill.style.width = Math.max(pct, 2) + '%';
+  fill.style.background = fillColor || 'linear-gradient(90deg,#388bfd,#79c0ff)';
+  document.getElementById('plbl').textContent = `Pytanie ${Math.min(cur+1,15)} z 15`;
+  document.getElementById('psco').textContent = (done || cur > 0)
+    ? `${score} / ${Math.min(cur+(done?1:0),15)}` : '';
+}
+
+function showScore() {
+  document.getElementById('qcard').style.display = 'none';
+  document.getElementById('sc').style.display = 'block';
+  document.getElementById('sfin').textContent = score;
+  document.getElementById('pfill').style.width = '100%';
+  document.getElementById('pfill').style.background = 'linear-gradient(90deg,#388bfd,#79c0ff)';
+  document.getElementById('plbl').textContent = 'Quiz zakończony';
+  document.getElementById('psco').textContent = `${score} / 15`;
+
+  const arc = document.getElementById('sarc');
+  const pct = score / 15;
+  arc.style.stroke = pct >= .8 ? '#3fb950' : pct >= .6 ? '#e3b341' : '#f85149';
+  setTimeout(() => { arc.style.strokeDashoffset = 351.9 * (1 - pct); }, 80);
+
+  const grades = [
+    [15,'🏆 Perfekcja!','Wszystkie 15 — znasz SQL i ORM na wyrywki!'],
+    [13,'🥇 Świetnie!','Prawie ideał. Doskonałe opanowanie obu tematów.'],
+    [11,'🥈 Bardzo dobrze!','Solidna wiedza, kilka szczegółów do podszlifowania.'],
+    [9, '🥉 Dobrze!','Podstawy są. Wróć do sekcji które sprawiały trudności.'],
+    [7, '📚 Połowa','Przejedź jeszcze raz notatniki L13 i L14.'],
+    [0, '💪 Czas na powtórkę','Otwórz L13_SQL.ipynb i L14_ORM.ipynb — wróć za chwilę!'],
+  ];
+  for (const [min, lbl, sub] of grades) {
+    if (score >= min) {
+      document.getElementById('slbl').textContent = lbl;
+      document.getElementById('ssub').textContent = sub;
+      break;
+    }
+  }
+
+  // Per-type scores
+  const sqlQ  = Q.map((q,i) => ({type:q.type, ok: answers[i]===q.ok})).filter(x=>x.type==='sql');
+  const ormQ  = Q.map((q,i) => ({type:q.type, ok: answers[i]===q.ok})).filter(x=>x.type==='orm');
+  const sqlOk = sqlQ.filter(x=>x.ok).length;
+  const ormOk = ormQ.filter(x=>x.ok).length;
+  document.getElementById('sql-score').textContent = `${sqlOk}/5`;
+  document.getElementById('orm-score').textContent = `${ormOk}/10`;
+  document.getElementById('tot-score').textContent = `${score}/15`;
+
+  // Dots
+  const dots = document.getElementById('sdots'); dots.innerHTML = '';
+  answers.forEach((a, i) => {
+    const d = document.createElement('div');
+    d.className = 'sc-dot' + (a === Q[i].ok ? '' : ' ng');
+    dots.appendChild(d);
+  });
+
+  // Wrong review
+  const rv = document.getElementById('rvlist'); rv.innerHTML = '';
+  const wrongs = answers.filter((a,i) => a !== Q[i].ok);
+  if (!wrongs.length) {
+    rv.innerHTML = '<div style="text-align:center;color:var(--green);font-size:14px;padding:12px">🎉 Zero błędów — perfekcja!</div>';
+    return;
+  }
+  answers.forEach((a, i) => {
+    if (a === Q[i].ok) return;
+    const q = Q[i];
+    const d = document.createElement('div');
+    d.className = 'rv-item';
+    d.innerHTML = `<span class="rv-badge ${q.type}">${q.type.toUpperCase()}</span>
+      <div class="rv-txt">
+        <strong>${q.tag}</strong> — ${q.txt.replace(/<[^>]+>/g,'').slice(0,65)}…
+        <div class="rv-ok">✓ ${'ABCD'[q.ok]}. ${q.opts[q.ok].t}</div>
+      </div>`;
+    rv.appendChild(d);
+  });
+}
+
+function restart() {
+  cur=0; score=0; answers=[]; done=false;
+  document.getElementById('qcard').style.display = 'block';
+  document.getElementById('sc').style.display = 'none';
+  document.getElementById('sarc').style.strokeDashoffset = '351.9';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

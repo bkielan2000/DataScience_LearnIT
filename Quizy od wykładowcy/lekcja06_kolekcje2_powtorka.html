@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Lekcja 06 — Kolekcje II</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.19.0/webfont/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F5F7;--surface:#FFFFFF;--surface2:#F8F9FB;
+  --border:#E3E8EF;--border2:#CBD5E1;
+  --text:#0F1721;--text2:#5A6476;--text3:#9AA3B2;
+  --navy:#141D2E;--navy2:#1E2E47;
+  --dict:#16A34A;--dict-bg:#F0FDF4;--dict-bd:#BBF7D0;--dict-dark:#14532D;
+  --set:#1D6FA4;--set-bg:#EFF6FF;--set-bd:#BFDBFE;--set-dark:#1E3A5F;
+  --tuple:#B45309;--tuple-bg:#FFFBEB;--tuple-bd:#FDE68A;--tuple-dark:#78350F;
+  --ok:#16A34A;--ok-bg:#F0FDF4;--ok-bd:#86EFAC;
+  --err:#DC2626;--err-bg:#FEF2F2;--err-bd:#FECACA;
+  --progress:#3B82F6;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Fira Code',monospace;
+  --r:8px;--rl:12px;
+}
+body{background:var(--bg);font-family:var(--sans);color:var(--text);min-height:100vh;padding:0}
+
+/* HEADER */
+.hdr{background:var(--navy);padding:1.75rem 2rem 1.5rem;position:relative;overflow:hidden}
+.hdr::after{content:'';position:absolute;right:-40px;top:-40px;width:220px;height:220px;
+  border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+.hdr-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.45);margin-bottom:6px}
+.hdr-title{font-size:26px;font-weight:600;color:#FFF;margin-bottom:4px;letter-spacing:-.02em}
+.hdr-sub{font-size:14px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:10px}
+.hdr-pill{display:inline-block;font-size:11px;font-weight:500;padding:2px 10px;border-radius:20px;
+  border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6)}
+
+/* CONTAINER */
+.wrap{max-width:960px;margin:0 auto;padding:1.5rem 1.5rem 3rem}
+
+/* TABS */
+.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--rl);padding:5px;width:fit-content;margin-bottom:1.5rem}
+.tab-btn{padding:7px 20px;border:none;background:transparent;border-radius:var(--r);
+  cursor:pointer;font-size:14px;font-family:var(--sans);font-weight:500;
+  color:var(--text2);transition:all .15s;display:flex;align-items:center;gap:7px}
+.tab-btn i{font-size:16px}
+.tab-btn.active{background:var(--navy);color:#FFF;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.tab-btn:hover:not(.active){background:var(--surface2);color:var(--text)}
+
+/* CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card-head{padding:.9rem 1.1rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.card-head i{font-size:18px}
+.card-head h2{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.card-body{padding:.25rem .5rem .5rem}
+
+.card-dict{border-top:3px solid var(--dict)}
+.card-dict .card-head{background:var(--dict-bg)}
+.card-dict .card-head i{color:var(--dict)}
+.card-dict .card-head h2{color:var(--dict-dark)}
+
+.card-set{border-top:3px solid var(--set)}
+.card-set .card-head{background:var(--set-bg)}
+.card-set .card-head i{color:var(--set)}
+.card-set .card-head h2{color:var(--set-dark)}
+
+.card-tuple{border-top:3px solid var(--tuple)}
+.card-tuple .card-head{background:var(--tuple-bg)}
+.card-tuple .card-head i{color:var(--tuple)}
+.card-tuple .card-head h2{color:var(--tuple-dark)}
+
+/* METHOD ROWS */
+.mrow{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;
+  padding:7px 6px;border-bottom:1px solid var(--border);align-items:start}
+.mrow:last-child{border-bottom:none}
+.mrow:hover{background:var(--surface2)}
+.mcode{font-family:var(--mono);font-size:11px;font-weight:500;background:var(--surface2);
+  border:1px solid var(--border);padding:2px 7px;border-radius:5px;white-space:nowrap;color:var(--text)}
+.mdesc{font-size:12px;line-height:1.45;color:var(--text);font-weight:500}
+.mex{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:1px;display:block}
+
+/* COMPARISON TABLE */
+.cmp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  overflow:hidden;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.cmp-head{padding:.75rem 1.1rem;background:var(--navy);display:flex;align-items:center;gap:8px}
+.cmp-head i{font-size:16px;color:rgba(255,255,255,.6)}
+.cmp-head h2{font-size:13px;font-weight:600;color:#FFF}
+.cmp-card table{width:100%;border-collapse:collapse;font-size:12px}
+.cmp-card th{padding:7px 12px;text-align:left;font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--text3);
+  background:var(--surface2);border-bottom:1px solid var(--border)}
+.cmp-card td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.cmp-card tr:last-child td{border-bottom:none}
+.cmp-card tr:hover td{background:var(--surface2)}
+.cmp-card td:first-child{font-family:var(--mono);font-weight:600;font-size:12px;color:var(--navy)}
+.ok-mark{color:var(--dict);font-weight:700}
+.no-mark{color:var(--err);font-weight:700}
+
+/* PITFALL BOX */
+.pitfall{background:linear-gradient(135deg,#FFFBEB,#FEF9E7);border:1px solid #FDE68A;
+  border-left:4px solid var(--tuple);border-radius:var(--r);padding:.85rem 1.1rem;
+  display:flex;align-items:flex-start;gap:10px}
+.pitfall i{font-size:18px;color:var(--tuple);flex-shrink:0;margin-top:1px}
+.pitfall p{font-size:13px;line-height:1.6;color:#451A03}
+.pitfall p strong{font-weight:600}
+.pitfall code{font-family:var(--mono);font-size:12px;background:rgba(255,255,255,.7);
+  padding:1px 6px;border-radius:4px;border:1px solid #FDE68A}
+
+/* QUIZ */
+.quiz-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.quiz-meta span{font-size:13px;color:var(--text2)}
+.quiz-score{font-weight:600;color:var(--text)}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;margin-bottom:1.25rem;overflow:hidden}
+.progress-fill{height:5px;background:var(--progress);border-radius:3px;transition:width .3s ease}
+
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  padding:1.25rem;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.q-text{font-size:16px;font-weight:500;line-height:1.55;color:var(--text);margin-bottom:12px}
+pre{font-family:var(--mono);font-size:13px;background:var(--navy);color:#E2E8F0;
+  border-radius:var(--r);padding:14px 16px;white-space:pre-wrap;line-height:1.6;margin-top:0}
+
+.opt-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:11px 14px;margin:6px 0;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);border-radius:var(--r);
+  cursor:pointer;font-size:14px;font-family:var(--sans);line-height:1.45;
+  transition:border-color .12s,background .12s}
+.opt-btn:hover:not(:disabled){background:var(--surface2);border-color:var(--border2)}
+.opt-btn:disabled{cursor:default}
+.opt-label{width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  font-weight:600;flex-shrink:0;color:var(--text2);transition:all .12s}
+.opt-btn.correct{background:var(--ok-bg);border-color:var(--ok-bd)}
+.opt-btn.correct .opt-label{background:var(--ok);border-color:var(--ok);color:#FFF}
+.opt-btn.wrong{background:var(--err-bg);border-color:var(--err-bd)}
+.opt-btn.wrong .opt-label{background:var(--err);border-color:var(--err);color:#FFF}
+
+.fb-box{padding:12px 15px;border-radius:var(--r);margin-top:8px;display:flex;gap:10px}
+.fb-box.ok-fb{background:var(--ok-bg);border:1px solid var(--ok-bd)}
+.fb-box.err-fb{background:var(--err-bg);border:1px solid var(--err-bd)}
+.fb-box i{font-size:18px;flex-shrink:0;margin-top:1px}
+.fb-box.ok-fb i{color:var(--ok)}
+.fb-box.err-fb i{color:var(--err)}
+.fb-title{font-size:14px;font-weight:600;margin-bottom:3px}
+.fb-box.ok-fb .fb-title{color:var(--dict-dark)}
+.fb-box.err-fb .fb-title{color:#7F1D1D}
+.fb-text{font-size:13px;line-height:1.55}
+.fb-box.ok-fb .fb-text{color:#166534}
+.fb-box.err-fb .fb-text{color:#991B1B}
+
+.nxt-btn{display:flex;align-items:center;justify-content:space-between;
+  margin-top:10px;width:100%;padding:11px 16px;border-radius:var(--r);
+  background:var(--navy);color:#FFF;border:none;cursor:pointer;
+  font-size:14px;font-weight:500;font-family:var(--sans);transition:background .12s}
+.nxt-btn:hover{background:var(--navy2)}
+.nxt-btn i{font-size:16px}
+
+/* RESULTS */
+.result-wrap{text-align:center;padding:2.5rem 1rem 2rem}
+.result-icon{width:72px;height:72px;border-radius:50%;display:inline-flex;
+  align-items:center;justify-content:center;margin-bottom:18px}
+.result-icon i{font-size:34px}
+.result-score{font-size:36px;font-weight:600;letter-spacing:-.03em;color:var(--text)}
+.result-score span{font-size:20px;font-weight:400;color:var(--text2)}
+.result-msg{font-size:15px;color:var(--text2);margin:6px 0 2rem;line-height:1.5}
+.result-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.res-btn{padding:10px 22px;border-radius:var(--r);border:1px solid var(--border2);
+  background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;
+  font-family:var(--sans);color:var(--text);transition:background .12s;
+  display:inline-flex;align-items:center;gap:8px}
+.res-btn:hover{background:var(--surface2)}
+.res-btn.primary{background:var(--navy);color:#FFF;border-color:var(--navy)}
+.res-btn.primary:hover{background:var(--navy2)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <p class="hdr-label">🐍 Python · Kurs Data Science</p>
+  <h1 class="hdr-title">Lekcja 06 — Kolekcje II</h1>
+  <div class="hdr-sub">
+    <span class="hdr-pill"><i class="ti ti-book-2"></i> Ściągawka + Quiz</span>
+    <span class="hdr-pill" id="quiz-pill" style="display:none"><i class="ti ti-brain"></i> 10 pytań</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab-btn active" id="t-cheat" onclick="showTab('cheat')">
+      <i class="ti ti-book-2"></i> Ściągawka
+    </button>
+    <button class="tab-btn" id="t-quiz" onclick="showTab('quiz')">
+      <i class="ti ti-brain"></i> Quiz
+    </button>
+  </div>
+
+  <!-- ŚCIĄGAWKA -->
+  <div id="s-cheat">
+    <div class="cards-grid">
+      <div class="card card-dict">
+        <div class="card-head">
+          <i class="ti ti-database"></i>
+          <h2>Słowniki — dict</h2>
+        </div>
+        <div class="card-body" id="dict-rows"></div>
+      </div>
+      <div class="card card-set">
+        <div class="card-head">
+          <i class="ti ti-circles-relation"></i>
+          <h2>Zbiory — set</h2>
+        </div>
+        <div class="card-body" id="set-rows"></div>
+      </div>
+      <div class="card card-tuple">
+        <div class="card-head">
+          <i class="ti ti-brackets"></i>
+          <h2>Krotki — tuple</h2>
+        </div>
+        <div class="card-body" id="tuple-rows"></div>
+      </div>
+    </div>
+
+    <div class="cmp-card">
+      <div class="cmp-head">
+        <i class="ti ti-table"></i>
+        <h2>Porównanie kolekcji</h2>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="cmp-table"></table>
+      </div>
+    </div>
+
+    <div class="pitfall">
+      <i class="ti ti-alert-triangle"></i>
+      <p><strong>Pułapka:</strong> <code>{}</code> to <strong>pusty słownik</strong>, nie zbiór! Pusty zbiór to zawsze <code>set()</code>.</p>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="s-quiz" style="display:none">
+    <div id="quiz-content"></div>
+  </div>
+</div>
+
+<script>
+const DM=[
+  ["d[klucz]","Dostęp (KeyError jeśli brak)","student['imie']"],
+  ["d.get(k, def)","Bezpieczny dostęp z domyślną","d.get('miasto','brak')"],
+  ["d[k] = v","Dodanie / modyfikacja","d['wiek'] = 26"],
+  ["del d[k]","Usunięcie klucza","del d['aktywny']"],
+  ["d.pop(k)","Usuwa i zwraca wartość","wiek = d.pop('wiek')"],
+  ["d.keys() / .values()","Widok kluczy / wartości","list(d.keys())"],
+  ["d.items()","Widok par — do iteracji","for k,v in d.items()"],
+  ["d.update(d2)","Aktualizacja słownika in-place","d.update({'a':1})"],
+  ["d.setdefault(k,v)","Dodaje klucz jeśli go brak","d.setdefault('kraj','PL')"],
+  ["{k:v for...}","Dictionary comprehension","{x:x**2 for x in r}"],
+];
+const SM=[
+  ["s = set()","PUSTY zbiór — nie {}!","zbior = set()"],
+  ["s.add(x)","Dodaje jeden element","s.add(6)"],
+  ["s.update(iter)","Dodaje wiele elementów","s.update([7,8])"],
+  ["s.remove(x)","Usuwa (KeyError jeśli brak)","s.remove(3)"],
+  ["s.discard(x)","Usuwa (bez błędu)","s.discard(100)"],
+  ["A | B","Suma — wszystkie elementy","A | B"],
+  ["A & B","Część wspólna (przecięcie)","A & B"],
+  ["A - B","Różnica — w A, nie w B","A - B"],
+  ["A ^ B","Różnica symetryczna","A ^ B"],
+  ["A.isdisjoint(B)","Czy A i B rozłączne?","A.isdisjoint(C)"],
+];
+const TM=[
+  ["t = (5,)","Jednoelementowa — przecinek!","t = (5,)  # nie (5)"],
+  ["t[i] / t[a:b]","Dostęp i slicing","t[-1], t[1:3]"],
+  ["t.count(x)","Liczba wystąpień x","t.count(2)"],
+  ["t.index(x)","Indeks pierwszego x","t.index(3)"],
+  ["a, b = t","Tuple unpacking","x, y = (3, 5)"],
+  ["a, *b, c = t","Extended unpacking","p, *srod, k = t"],
+  ["a, b = b, a","Zamiana bez zmiennej pom.","a, b = b, a"],
+  ["return a, b, c","Zwracanie wielu wartości","return avg, mn, mx"],
+];
+const CMP_H=["Kolekcja","Mutowalna","Porządek","Duplikaty","Dostęp","in — O(?)"];
+const CMP_D=[
+  ["list","✓","✓","✓","indeks","O(n)"],
+  ["tuple","✗","✓","✓","indeks","O(n)"],
+  ["dict","✓","✓ (3.7+)","klucze ✗","klucz","O(1)"],
+  ["set","✓","✗","✗","—","O(1)"],
+];
+const QS=[
+  {q:"Jak stworzyć PUSTY ZBIÓR w Pythonie?",c:null,o:["zbior = {}","zbior = set()","zbior = []","zbior = ()"],a:1,e:"{} tworzy PUSTY SŁOWNIK, nie zbiór! Pusty zbiór to zawsze set(). Klasyczna pułapka!"},
+  {q:"Co zwróci poniższy kod?",c:"zbior = {1, 2, 2, 3, 3, 3}\nprint(len(zbior))",o:["6","3","9","TypeError"],a:1,e:"Zbiór automatycznie usuwa duplikaty. {1,2,2,3,3,3} to {1,2,3} — 3 unikalne elementy."},
+  {q:"Co zwróci student.get('miasto', 'Warszawa'), gdy klucz nie istnieje?",c:null,o:["KeyError","None","'Warszawa'","''"],a:2,e:".get(klucz, domyślna) zwraca wartość domyślną gdy klucza brak — nigdy nie rzuca KeyError. To bezpieczna alternatywa dla d['klucz']."},
+  {q:"Krotki w Pythonie są...",c:null,o:["Mutowalne i uporządkowane","Niemutowalne i nieuporządkowane","Niemutowalne i uporządkowane","Mutowalne i nieuporządkowane"],a:2,e:"Krotka jest NIEMUTOWALNA (nie można zmieniać) i UPORZĄDKOWANA (zachowuje kolejność, dostęp po indeksie). Porównaj z set — nieuporządkowany!"},
+  {q:"Co zwróci poniższy kod?",c:"A = {1, 2, 3, 4}\nB = {3, 4, 5, 6}\nprint(A & B)",o:["{1, 2, 3, 4, 5, 6}","{3, 4}","{1, 2}","{1, 2, 5, 6}"],a:1,e:"& to część wspólna (przecięcie). A & B = tylko elementy będące w OBU zbiorach = {3, 4}. | to suma, - to różnica, ^ to różnica symetryczna."},
+  {q:"Jak poprawnie stworzyć jednoelementową krotkę?",c:null,o:["t = (5)","t = (5,)","t = [5]","t = tuple(5)"],a:1,e:"(5) to po prostu liczba 5 w nawiasach! Przecinek jest WYMAGANY: (5,). tuple(5) też nie zadziała — tuple() przyjmuje iterable."},
+  {q:"Co robi slownik.pop('klucz')?",c:null,o:["Sprawdza czy klucz istnieje (True/False)","Usuwa i zwraca wartość przypisaną do klucza","Usuwa klucz, nic nie zwraca","Zwraca wartość ale nie usuwa klucza"],a:1,e:"pop(klucz) usuwa parę klucz-wartość i ZWRACA wartość. Jeśli klucz nie istnieje → KeyError (chyba że podasz domyślną: pop('k', None))."},
+  {q:"Jaka jest złożoność sprawdzania 'x in zbior' dla zbioru?",c:null,o:["O(n) — liniowa, jak dla listy","O(n log n)","O(1) — stała, niezależna od rozmiaru","O(n²)"],a:2,e:"Zbiory i słowniki używają tablicy haszującej — sprawdzanie przynależności O(1) niezależnie od rozmiaru. Lista/krotka: O(n)."},
+  {q:"Co wydrukuje poniższy kod?",c:"a, b = 5, 10\na, b = b, a\nprint(a, b)",o:["5 10","10 5","(10, 5)","NameError"],a:1,e:"Python trick — zamiana wartości bez zmiennej pomocniczej. Python tworzy krotkę (b,a) = (10,5), potem przypisuje a=10, b=5."},
+  {q:"Jak iterować po parach klucz-wartość słownika?",c:null,o:["for k in slownik:","for k, v in slownik.values():","for k, v in slownik.items():","for k, v in slownik.pairs():"],a:2,e:".items() zwraca pary (klucz, wartość). .keys() → same klucze. .values() → same wartości."},
+  {q:"Jaka jest różnica między remove() a discard() w zbiorze?",c:null,o:["Nie ma żadnej różnicy","remove() usuwa wszystkie, discard() tylko pierwsze","remove() rzuca KeyError gdy elementu brak, discard() nie","discard() zwraca usunięty element, remove() nie"],a:2,e:"remove(x) → KeyError gdy x nie ma w zbiorze. discard(x) → cicho ignoruje brak. Bezpieczniej używać discard() gdy nie masz pewności."},
+  {q:"Czy krotka może być kluczem słownika?",c:"d = {(52.23, 21.01): 'Warszawa'}",o:["Tak — krotki są niemutowalne, więc mogą być kluczami","Nie — tylko stringi i liczby mogą być kluczami","Nie — krotki nie są hashowalne","Tak, ale tylko krotki jednoelementowe"],a:0,e:"Klucze muszą być niemutowalne (hashowalne). Krotka ✓. Lista ✗ (mutowalna → błąd). Dlatego krotki używa się np. do przechowywania współrzędnych GPS jako kluczy."},
+  {q:"Co zwróci poniższy kod?",c:"{x: x**2 for x in range(1, 4)}",o:["{1, 4, 9}","[1, 4, 9]","{1:1, 2:4, 3:9}","TypeError"],a:2,e:"Dictionary comprehension tworzy słownik. Składnia: {klucz: wartość for elem in iterable}. Wynik: {1:1, 2:4, 3:9}."},
+  {q:"Co robi slownik.update({'epochs': 150})?",c:null,o:["Zastępuje cały słownik nowym","Dodaje/aktualizuje klucze modyfikując oryginał","Zwraca nowy połączony słownik (oryginał bez zmian)","Błąd — update() nie przyjmuje słownika"],a:1,e:"update() modyfikuje słownik IN-PLACE: istniejące klucze nadpisuje, nowe dodaje. Oryginał jest zmieniany! Podobnie jak sort() dla listy."},
+  {q:"Co zwróci d.get('klucz') gdy klucza nie ma i nie podano wartości domyślnej?",c:null,o:["KeyError","0","None","''"],a:2,e:".get(k) bez drugiego argumentu zwraca None gdy klucza brak. To główna różnica wobec d['k'], który rzuca KeyError."},
+  {q:"Jak dodać WIELE elementów do zbioru naraz?",c:null,o:["zbior.add([1, 2, 3])","zbior.append(1, 2, 3)","zbior.update([1, 2, 3])","zbior.extend([1, 2, 3])"],a:2,e:"update() dodaje wszystkie elementy z iterable. add() dodaje tylko JEDEN element. append() i extend() nie istnieją dla zbiorów!"},
+  {q:"Co zwraca metoda .keys() słownika?",c:null,o:["Listę kluczy","Zbiór kluczy","Krotkę kluczy","Obiekt dict_keys — nie listę!"],a:3,e:".keys() zwraca dict_keys — dynamiczny widok, nie listę. Aby uzyskać listę: list(slownik.keys()). Widok aktualizuje się automatycznie gdy słownik się zmienia."},
+  {q:"Co zwróci poniższy kod?",c:"A = {1, 2, 3, 4}\nB = {3, 4, 5, 6}\nprint(A - B)",o:["{1,2,3,4,5,6}","{3,4}","{1,2}","{5,6}"],a:2,e:"A - B = elementy które są w A ale NIE ma ich w B. {1,2,3,4} minus {3,4} = {1,2}. Uwaga: B-A dałoby {5,6}!"},
+  {q:"Co otrzymamy po extended unpackingu?",c:"p, *srodek, k = (1, 2, 3, 4, 5)",o:["Błąd składni","p=1, srodek=[2,3,4], k=5","p=1, srodek=(2,3,4), k=5","p=(1,), srodek=[2,3,4], k=(5,)"],a:1,e:"Extended unpacking z * zbiera 'resztę' do LISTY. p=1, srodek=[2,3,4], k=5. Gwiazdka daje listę (nie krotkę)!"},
+];
+
+// Render reference rows
+function mkRow(m,d,e){
+  return `<div class="mrow">
+    <code class="mcode">${m}</code>
+    <div><div class="mdesc">${d}</div><code class="mex">${e}</code></div>
+  </div>`;
+}
+document.getElementById('dict-rows').innerHTML=DM.map(([m,d,e])=>mkRow(m,d,e)).join('');
+document.getElementById('set-rows').innerHTML=SM.map(([m,d,e])=>mkRow(m,d,e)).join('');
+document.getElementById('tuple-rows').innerHTML=TM.map(([m,d,e])=>mkRow(m,d,e)).join('');
+
+// Comparison table
+const tbl=document.getElementById('cmp-table');
+tbl.innerHTML=`<thead><tr>${CMP_H.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+<tbody>${CMP_D.map((r,i)=>`<tr>${r.map((c,j)=>`<td class="${c==='✓'?'ok-mark':c==='✗'?'no-mark':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+
+// Tab switching
+function showTab(t){
+  document.getElementById('s-cheat').style.display=t==='cheat'?'block':'none';
+  document.getElementById('s-quiz').style.display=t==='quiz'?'block':'none';
+  document.getElementById('t-cheat').className='tab-btn'+(t==='cheat'?' active':'');
+  document.getElementById('t-quiz').className='tab-btn'+(t==='quiz'?' active':'');
+  document.getElementById('quiz-pill').style.display=t==='quiz'?'inline-block':'none';
+  if(t==='quiz'&&!qs.started) initQuiz();
+}
+
+// Quiz state
+const qs={questions:[],cur:0,score:0,answered:false,started:false};
+
+function initQuiz(){
+  qs.questions=[...QS].sort(()=>Math.random()-.5).slice(0,10);
+  qs.cur=0;qs.score=0;qs.answered=false;qs.started=true;
+  renderQ();
+}
+
+function renderQ(){
+  const {questions,cur,score}=qs;
+  const q=questions[cur];const n=questions.length;
+  const pct=Math.round(cur/n*100);const isLast=cur===n-1;
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="quiz-meta">
+      <span>Pytanie <strong style="color:var(--text)">${cur+1}</strong> z ${n}</span>
+      <span class="quiz-score"><i class="ti ti-star" style="font-size:14px;vertical-align:-2px;color:#F59E0B"></i> ${score} pkt</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="q-card">
+      <p class="q-text">${q.q}</p>
+      ${q.c?`<pre>${q.c}</pre>`:''}
+    </div>
+    <div id="opts">${q.o.map((opt,i)=>`
+      <button class="opt-btn" id="o${i}" onclick="pick(${i})">
+        <span class="opt-label">${'ABCD'[i]}</span>${opt}
+      </button>`).join('')}</div>
+    <div id="fb" style="display:none"></div>
+    <button id="nxt" onclick="nextQ()" style="display:none" class="nxt-btn">
+      <span>${isLast?'Zobacz wynik':'Następne pytanie'}</span>
+      <i class="ti ${isLast?'ti-flag':'ti-arrow-right'}"></i>
+    </button>`;
+}
+
+function pick(i){
+  if(qs.answered)return;
+  qs.answered=true;
+  const q=qs.questions[qs.cur];const ok=i===q.a;
+  if(ok)qs.score++;
+  for(let k=0;k<4;k++){
+    const b=document.getElementById('o'+k);if(!b)continue;
+    b.disabled=true;
+    if(k===q.a)b.classList.add('correct');
+    else if(k===i&&!ok)b.classList.add('wrong');
+  }
+  const fb=document.getElementById('fb');
+  fb.style.display='block';
+  fb.innerHTML=`<div class="fb-box ${ok?'ok-fb':'err-fb'}">
+    <i class="ti ${ok?'ti-circle-check':'ti-circle-x'}"></i>
+    <div><p class="fb-title">${ok?'Dobrze!':'Nie tym razem.'}</p>
+    <p class="fb-text">${q.e}</p></div>
+  </div>`;
+  document.getElementById('nxt').style.display='flex';
+}
+
+function nextQ(){
+  qs.cur++;qs.answered=false;
+  if(qs.cur>=qs.questions.length)renderDone();else renderQ();
+}
+
+function renderDone(){
+  const {score,questions}=qs;const n=questions.length;const p=score/n;
+  const [ic,bg,tc]=p>=.8?['ti-trophy','#FEF9C3','#854D0E']:p>=.6?['ti-thumb-up','#DBEAFE','#1E3A8A']:['ti-refresh','#EDE9FE','#4C1D95'];
+  const msg=p>=.8?'Kolekcje II opanowane! Świetna robota.':p>=.6?'Nieźle! Przejrzyj ściągawkę i powtórz słabsze punkty.':'Wróć do ściągawki i spróbuj ponownie — dasz radę!';
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="result-wrap">
+      <div class="result-icon" style="background:${bg}"><i class="ti ${ic}" style="color:${tc}"></i></div>
+      <div class="result-score">${score}<span> / ${n}</span></div>
+      <p class="result-msg">${msg}</p>
+      <div class="result-btns">
+        <button onclick="initQuiz()" class="res-btn primary">
+          <i class="ti ti-refresh"></i> Spróbuj ponownie
+        </button>
+        <button onclick="showTab('cheat')" class="res-btn">
+          <i class="ti ti-book-2"></i> Ściągawka
+        </button>
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>

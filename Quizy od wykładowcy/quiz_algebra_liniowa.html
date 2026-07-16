@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Algebra Liniowa | DS02-05-26</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1117;--surface:#161b22;--card:#1c2128;--border:#30363d;--border2:#21262d;
+    --text:#e6edf3;--muted:#7d8590;
+    --purple:#d2a8ff;--purple-bg:rgba(210,168,255,.08);--purple-bd:rgba(210,168,255,.28);
+    --green:#3fb950;--green-bg:rgba(63,185,80,.10);--green-bd:rgba(63,185,80,.32);
+    --red:#f85149;--red-bg:rgba(248,81,73,.10);--red-bd:rgba(248,81,73,.32);
+    --amber:#e3b341;--amber-bg:rgba(227,179,65,.08);--amber-bd:rgba(227,179,65,.28);
+    --blue:#79c0ff;
+    --kw:#ff7b72;--fn:#d2a8ff;--str:#a5d6ff;--num:#79c0ff;--cmt:#8b949e;--tbl:#ffa657;
+    --mono:'JetBrains Mono',monospace;--sans:'Inter',system-ui,sans-serif;
+  }
+  html{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+  body{display:flex;flex-direction:column;align-items:center;padding:36px 16px 60px}
+
+  .hdr{text-align:center;margin-bottom:26px}
+  .hdr-eye{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .hdr-title{font-size:26px;font-weight:700;margin-bottom:6px}
+  .hdr-sub{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .hdr-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  .htag{padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;
+    font-family:var(--mono);background:var(--purple-bg);border:1px solid var(--purple-bd);color:var(--purple)}
+
+  .prog-wrap{width:100%;max-width:730px;margin-bottom:20px}
+  .prog-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);
+    font-family:var(--mono);margin-bottom:7px}
+  .prog-track{height:3px;background:var(--border);border-radius:99px;overflow:hidden}
+  .prog-fill{height:100%;background:linear-gradient(90deg,#8957e5,#d2a8ff);
+    border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+
+  .card{width:100%;max-width:730px;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;overflow:hidden}
+
+  .q-head{padding:20px 24px 14px;border-bottom:1px solid var(--border2);
+    display:flex;align-items:flex-start;gap:14px}
+  .q-num{flex-shrink:0;width:34px;height:34px;border-radius:9px;background:var(--purple-bg);
+    border:1px solid var(--purple-bd);display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:13px;font-weight:600;color:var(--purple)}
+  .q-tag{display:inline-block;margin-bottom:6px;padding:2px 9px;border-radius:4px;
+    background:var(--purple-bg);border:1px solid var(--purple-bd);font-family:var(--mono);
+    font-size:10px;font-weight:600;color:var(--purple);letter-spacing:.05em;text-transform:uppercase}
+  .q-txt{font-size:15px;line-height:1.65;color:var(--text);font-weight:500}
+  .q-txt code{font-family:var(--mono);font-size:12.5px;background:rgba(255,255,255,.06);
+    padding:1px 5px;border-radius:4px}
+
+  .code-wrap{padding:14px 24px 0}
+  .code-box{background:var(--surface);border:1px solid var(--border);border-radius:9px;
+    padding:14px 16px;font-family:var(--mono);font-size:13px;line-height:2;overflow-x:auto;white-space:pre}
+  .kw{color:var(--kw);font-weight:600}.fn{color:var(--fn)}.str{color:var(--str)}
+  .num{color:var(--num)}.cmt{color:var(--cmt);font-style:italic}.tbl{color:var(--tbl)}
+
+  .blank-wrap{display:inline-block;position:relative;vertical-align:middle;margin:0 2px}
+  .blank-input{font-family:var(--mono);font-size:13px;
+    background:rgba(210,168,255,.12);border:1.5px dashed rgba(210,168,255,.55);
+    border-radius:5px;color:var(--purple);padding:2px 8px;outline:none;
+    transition:border-color .15s,background .15s,color .15s;min-width:40px}
+  .blank-input:focus{border-color:var(--purple);background:rgba(210,168,255,.18)}
+  .blank-input.ok{background:var(--green-bg)!important;border-color:var(--green-bd)!important;
+    color:var(--green)!important;border-style:solid!important}
+  .blank-input.ng{background:var(--red-bg)!important;border-color:var(--red-bd)!important;
+    color:var(--red)!important;border-style:solid!important}
+  .blank-input:disabled{cursor:default}
+  .correct-label{font-size:11px;color:var(--green);font-family:var(--mono);
+    position:absolute;top:-20px;left:0;white-space:nowrap;display:none}
+  .blank-input.ng ~ .correct-label{display:block}
+
+  .ans-area{padding:14px 24px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .ans-label{font-size:12px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+  .hint-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--amber-bd);
+    background:var(--amber-bg);color:var(--amber);font-family:var(--mono);font-size:11px;
+    font-weight:600;cursor:pointer;transition:opacity .12s}
+  .hint-btn:hover{opacity:.8}.hint-btn:disabled{opacity:.35;cursor:default}
+  .check-btn{padding:7px 20px;border-radius:7px;border:none;cursor:pointer;
+    background:#8957e5;color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;
+    transition:opacity .12s,transform .1s}
+  .check-btn:hover{opacity:.85}.check-btn:active{transform:scale(.97)}
+  .check-btn:disabled{opacity:.3;cursor:default}
+
+  .hint-box{margin:10px 24px 0;padding:10px 14px;border-radius:8px;
+    background:var(--amber-bg);border:1px solid var(--amber-bd);
+    font-size:12.5px;color:var(--amber);font-family:var(--mono);display:none}
+  .hint-box.show{display:block}
+
+  .fb{margin:14px 24px 0;padding:12px 15px;border-radius:8px;font-size:13px;
+    line-height:1.6;display:none;gap:10px;align-items:flex-start}
+  .fb.show{display:flex}
+  .fb.ok{background:var(--green-bg);border:1px solid var(--green-bd);color:#7ee787}
+  .fb.ng{background:var(--red-bg);border:1px solid var(--red-bd);color:#ffa198}
+  .fb-icon{font-size:15px;flex-shrink:0;padding-top:1px}
+
+  .card-foot{padding:14px 24px;border-top:1px solid var(--border2);margin-top:18px;
+    display:flex;justify-content:space-between;align-items:center}
+  .foot-hint{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .next-btn{padding:10px 24px;border-radius:8px;border:none;cursor:pointer;
+    font-family:var(--sans);font-size:14px;font-weight:600;background:#8957e5;color:#fff;
+    transition:opacity .12s,transform .1s}
+  .next-btn:hover{opacity:.85}.next-btn:active{transform:scale(.97)}
+  .next-btn:disabled{opacity:.3;cursor:default}
+
+  #sc{display:none;width:100%;max-width:730px}
+  .sc-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:40px 32px;text-align:center}
+  .sc-ring{width:130px;height:130px;margin:0 auto 22px;position:relative}
+  .sc-ring svg{transform:rotate(-90deg)}
+  .sc-bg{fill:none;stroke:var(--border);stroke-width:9}
+  .sc-arc{fill:none;stroke-width:9;stroke-linecap:round;
+    transition:stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1)}
+  .sc-mid{position:absolute;inset:0;display:flex;align-items:center;
+    justify-content:center;flex-direction:column}
+  .sc-big{font-size:30px;font-weight:700;font-family:var(--mono)}
+  .sc-den{font-size:13px;color:var(--muted);font-family:var(--mono)}
+  .sc-lbl{font-size:20px;font-weight:700;margin-bottom:7px}
+  .sc-sub{font-size:13.5px;color:var(--muted);margin-bottom:26px}
+  .sc-dots{display:grid;grid-template-columns:repeat(15,1fr);gap:5px;margin-bottom:26px}
+  .sc-dot{height:6px;border-radius:99px;background:var(--green)}
+  .sc-dot.ng{background:var(--red)}
+  .rv{text-align:left;margin-bottom:26px}
+  .rv-item{padding:11px 15px;border-radius:8px;margin-bottom:7px;
+    border:1px solid var(--red-bd);background:var(--surface);font-size:12.5px}
+  .rv-q{color:var(--muted);font-family:var(--mono);font-size:11px;margin-bottom:4px}
+  .rv-wrong{color:var(--red);font-family:var(--mono)}
+  .rv-right{color:var(--green);font-family:var(--mono)}
+  .btn-rs{background:var(--surface);color:var(--text);border:1px solid var(--border);
+    padding:11px 28px;border-radius:8px;font-family:var(--sans);font-size:14px;
+    font-weight:600;cursor:pointer;transition:border-color .12s}
+  .btn-rs:hover{border-color:var(--purple)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-eye">DS02-05-26 · LearnIT · Michał Szłapa</div>
+  <div class="hdr-title">Uzupełnij lukę — Algebra Liniowa</div>
+  <div class="hdr-sub">15 pytań · wpisz brakującą funkcję lub operator NumPy · Enter = sprawdź</div>
+  <div class="hdr-tags">
+    <span class="htag">WEKTORY</span><span class="htag">MACIERZE</span>
+    <span class="htag">DOT PRODUCT</span><span class="htag">NORMY</span>
+    <span class="htag">PCA</span><span class="htag">SVD</span>
+    <span class="htag">K-NN</span><span class="htag">BROADCASTING</span>
+  </div>
+</div>
+
+<div class="prog-wrap">
+  <div class="prog-meta"><span id="plbl">Pytanie 1 z 15</span><span id="psco"></span></div>
+  <div class="prog-track"><div class="prog-fill" id="pfill" style="width:4%"></div></div>
+</div>
+
+<div class="card" id="qcard">
+  <div class="q-head">
+    <div class="q-num" id="qnum">1</div>
+    <div class="q-right">
+      <div class="q-tag" id="qtag">TAG</div>
+      <div class="q-txt" id="qtxt"></div>
+    </div>
+  </div>
+  <div class="code-wrap"><div class="code-box" id="cbox"></div></div>
+  <div class="ans-area">
+    <span class="ans-label">↑ uzupełnij lukę:</span>
+    <button class="hint-btn" id="hbtn" onclick="showHint()">💡 podpowiedź</button>
+    <button class="check-btn" id="cbtn" onclick="checkAnswer()">Sprawdź</button>
+  </div>
+  <div class="hint-box" id="hbox"></div>
+  <div class="fb" id="fb"><span class="fb-icon" id="fbico"></span><span id="fbtxt"></span></div>
+  <div class="card-foot">
+    <span class="foot-hint" id="fhint"></span>
+    <button class="next-btn" id="nbtn" disabled onclick="next()">Dalej →</button>
+  </div>
+</div>
+
+<div id="sc">
+  <div class="sc-card">
+    <div class="sc-ring">
+      <svg width="130" height="130" viewBox="0 0 130 130">
+        <circle class="sc-bg" cx="65" cy="65" r="56"/>
+        <circle class="sc-arc" id="sarc" cx="65" cy="65" r="56"
+                stroke-dasharray="351.9" stroke-dashoffset="351.9"/>
+      </svg>
+      <div class="sc-mid"><div class="sc-big" id="sfin">0</div><div class="sc-den">/ 15</div></div>
+    </div>
+    <div class="sc-lbl" id="slbl"></div>
+    <div class="sc-sub" id="ssub"></div>
+    <div class="sc-dots" id="sdots"></div>
+    <div class="rv" id="rvlist"></div>
+    <button class="btn-rs" onclick="restart()">↺ Spróbuj ponownie</button>
+  </div>
+</div>
+
+<script>
+const Q = [
+  {
+    tag:'Wektory — reshape',
+    txt:'Jak zamienić wektor 1D o kształcie <code>(4,)</code> na wektor kolumnowy <code>(4, 1)</code>?',
+    code:
+`v = <span class="fn">np.array</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>])   <span class="cmt"># shape: (4,)</span>
+
+v_col = v.{{BLANK:7}}(-<span class="num">1</span>, <span class="num">1</span>)   <span class="cmt"># shape: (4, 1)</span>
+<span class="fn">print</span>(v_col.shape)   <span class="cmt"># (4, 1)</span>`,
+    answers:['reshape'],correct:'reshape',
+    hint:'Metoda NumPy zmieniająca kształt tablicy bez zmiany danych. -1 = "oblicz automatycznie".',
+    exp:'reshape(-1, 1) przekształca dowolny wektor 1D w kolumnowy (n,1). Odwrotnie: reshape(1,-1) → wierszowy (1,n). Przydatne przed mnożeniem macierzowym gdy sklearn wymaga (n,1).'
+  },
+  {
+    tag:'Dot product — operator @',
+    txt:'Oblicz iloczyn skalarny dwóch wektorów używając nowoczesnego operatora Python.',
+    code:
+`a = <span class="fn">np.array</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>])
+b = <span class="fn">np.array</span>([<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>])
+
+wynik = a {{BLANK:1}} b   <span class="cmt"># 1·4 + 2·5 + 3·6 = 32</span>
+<span class="fn">print</span>(wynik)   <span class="cmt"># 32</span>`,
+    answers:['@'],correct:'@',
+    hint:'Jednosymbolowy operator dodany w Python 3.5 dla iloczynu macierzowego i skalarnego.',
+    exp:'Operator @ to preferowany sposób mnożenia w NumPy (od Python 3.5). Działa dla: a@b (dot product), X@w (maierz×wektor), A@B (mnożenie macierzy). Alternatywy: np.dot(a,b) lub (a*b).sum() — ale @ jest czytelniejszy.'
+  },
+  {
+    tag:'Normy — np.linalg.norm',
+    txt:'Oblicz normę L2 (euklidesową) i L1 (Manhattan) wektora <code>v = [3, 4]</code>.',
+    code:
+`v = <span class="fn">np.array</span>([<span class="num">3</span>, <span class="num">4</span>])
+
+L2 = np.linalg.{{BLANK:4}}(v)           <span class="cmt"># = 5.0  (√(9+16))</span>
+L1 = np.linalg.{{BLANK:4}}(v, ord=<span class="num">1</span>)   <span class="cmt"># = 7    (3+4)</span>
+Li = np.linalg.{{BLANK:4}}(v, ord=np.inf)  <span class="cmt"># = 4   max(3,4)</span>`,
+    answers:['norm'],correct:'norm',
+    hint:'Funkcja z modułu np.linalg do obliczania "długości" wektora. Przyjmuje parametr ord=1/2/inf.',
+    exp:'np.linalg.norm(v) domyślnie oblicza L2 (euklidesową). Z ord=1 → L1 (Manhattan), ord=np.inf → L∞ (maksimum). Zastosowania: L2 → odległość k-NN, Ridge; L1 → Lasso (sparsity); L∞ → gradient clipping.'
+  },
+  {
+    tag:'Transpozycja',
+    txt:'Zmień kształt macierzy z <code>(3, 5)</code> na <code>(5, 3)</code> przez transpozycję.',
+    code:
+`A = <span class="fn">np.zeros</span>((<span class="num">3</span>, <span class="num">5</span>))   <span class="cmt"># kształt (3, 5)</span>
+
+A_T = A.{{BLANK:1}}             <span class="cmt"># kształt (5, 3)</span>
+<span class="fn">print</span>(A_T.shape)   <span class="cmt"># (5, 3)</span>
+
+<span class="cmt"># Własność: (A @ B)^T = B^T @ A^T</span>`,
+    answers:['t','T'],correct:'T',
+    hint:'Atrybut (nie metoda!) NumPy zamieniający wiersze z kolumnami. Jedna wielka litera.',
+    exp:'A.T to atrybut transpozycji — nie kopiuje danych, tylko zmienia "widok". Kluczowe zastosowania: gradient descent (X.T @ delta), macierz kowariancji (X.T @ X / (n-1)), wzór normalny regresji ((X.T @ X)^-1 @ X.T @ y).'
+  },
+  {
+    tag:'Predykcja ML — y = X @ w + b',
+    txt:'Zaimplementuj predykcję regresji liniowej: <code>y = X @ w + b</code> dla 1000 obserwacji.',
+    code:
+`X = <span class="fn">np.random.rand</span>(<span class="num">1000</span>, <span class="num">8</span>)   <span class="cmt"># (1000, 8)</span>
+w = <span class="fn">np.random.rand</span>(<span class="num">8</span>)          <span class="cmt"># (8,)</span>
+b = <span class="num">0.5</span>                         <span class="cmt"># bias</span>
+
+y_pred = X {{BLANK:1}} w + b   <span class="cmt"># (1000,) — 1000 predykcji naraz!</span>
+<span class="fn">print</span>(y_pred.shape)   <span class="cmt"># (1000,)</span>`,
+    answers:['@'],correct:'@',
+    hint:'Ten sam operator co dot product. Reguła: (1000,8) @ (8,) = (1000,).',
+    exp:'X @ w oblicza predykcje dla WSZYSTKICH 1000 obserwacji jednocześnie. Reguła wymiarów: (m,n)@(n,)=(m,). Każdy element y_pred[i] = dot(X[i], w) + b. Ta jedna linijka to serce regresji liniowej, logistycznej i każdej warstwy sieci neuronowej!'
+  },
+  {
+    tag:'Broadcasting — standaryzacja',
+    txt:'Zestandardyzuj dane Iris (mean=0, std=1) używając broadcastingu — bez pętli.',
+    code:
+`X = X_iris.copy()   <span class="cmt"># shape (150, 4)</span>
+
+<span class="cmt"># Statystyki per cecha (axis=0 = wzdłuż wierszy)</span>
+mu  = X.{{BLANK:4}}(axis=<span class="num">0</span>)   <span class="cmt"># (4,) — jedna śr. per kolumna</span>
+std = X.std(axis=<span class="num">0</span>)    <span class="cmt"># (4,)</span>
+
+<span class="cmt"># Broadcasting: (150,4) - (4,) = (150,4) — magia NumPy!</span>
+X_std = (X - mu) / std`,
+    answers:['mean'],correct:'mean',
+    hint:'Metoda pandas/NumPy zwracająca średnią. axis=0 = wzdłuż osi 0 (wierszy) → per kolumna.',
+    exp:'Broadcasting automatycznie "rozciąga" mu (4,) do (150,4) odejmując właściwą średnią od każdej kolumny. Bez broadcastingu potrzebowałbyś pętli. Standaryzacja to StandardScaler() w sklearn — ta implementacja jest z nim identyczna (weryfikowaliśmy: różnica < 1e-15).'
+  },
+  {
+    tag:'Eigendecomposition — PCA',
+    txt:'Oblicz wartości i wektory własne macierzy kowariancji dla PCA. Użyj właściwej funkcji dla macierzy symetrycznych.',
+    code:
+`X_c = X_iris - X_iris.<span class="fn">mean</span>(axis=<span class="num">0</span>)  <span class="cmt"># centrowanie</span>
+cov  = (X_c.T @ X_c) / (<span class="fn">len</span>(X_c) - <span class="num">1</span>)    <span class="cmt"># macierz kowariancji (4,4)</span>
+
+<span class="cmt"># eigh — dla macierzy SYMETRYCZNYCH → zawsze real eigenvalues!</span>
+eigenvalues, eigenvectors = np.linalg.{{BLANK:4}}(cov)
+<span class="cmt"># wynik: eigenvalues=[0.02, 0.08, 0.24, 4.23] (nieposortowane)</span>`,
+    answers:['eigh'],correct:'eigh',
+    hint:'Specjalna wersja eigendecomposition dla macierzy symetrycznych (hermitian). Daje RZECZYWISTE wartości własne, szybsza od eig().',
+    exp:'np.linalg.eigh (nie eig!) dla macierzy symetrycznych jak kowariancja — gwarantuje rzeczywiste eigenvalues, jest numerycznie stabilniejsze. Po eigh: posortuj malejąco (argsort[::-1]), weź k pierwszych eigenvectors → macierz projekcji W (n_features, k). Projekcja: Z = X_c @ W.'
+  },
+  {
+    tag:'SVD — kompresja',
+    txt:'Wykonaj SVD (Singular Value Decomposition) obrazu grayscale. Ta operacja to fundament PCA i kompresji.',
+    code:
+`image = <span class="fn">np.random.rand</span>(<span class="num">200</span>, <span class="num">300</span>)  <span class="cmt"># obraz (H, W)</span>
+
+U, S, Vt = np.linalg.{{BLANK:3}}(image, full_matrices=<span class="kw">False</span>)
+<span class="cmt"># U: (200,200), S: (200,), Vt: (200,300)</span>
+<span class="cmt"># Rekonstrukcja k komponentami:</span>
+k = <span class="num">20</span>
+image_k = U[:, :k] @ <span class="fn">np.diag</span>(S[:k]) @ Vt[:k, :]`,
+    answers:['svd'],correct:'svd',
+    hint:'Skrót od Singular Value Decomposition. Rozkład A = U·Σ·Vᵀ dla dowolnej macierzy (nie tylko kwadratowej).',
+    exp:'np.linalg.svd rozkłada macierz na U·Σ·Vᵀ. k=20 singular values → 87% kompresji przy dobrej jakości. SVD to "ogólniejszy PCA" — działa na dowolnych prostokątnych macierzach. Zastosowania: kompresja obrazów, rekomendacje (latent factors), pseudoinverse, LSA w NLP.'
+  },
+  {
+    tag:'axis — agregacje',
+    txt:'Oblicz średnią per kolumna (cecha) dla macierzy danych. Jaki numer osi?',
+    code:
+`X = <span class="fn">np.array</span>([[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>],
+              [<span class="num">4</span>,<span class="num">5</span>,<span class="num">6</span>],
+              [<span class="num">7</span>,<span class="num">8</span>,<span class="num">9</span>]])   <span class="cmt"># shape (3, 3)</span>
+
+<span class="cmt"># Średnia PER KOLUMNA (per cecha):</span>
+col_means = X.<span class="fn">mean</span>(axis={{BLANK:1}})
+<span class="cmt"># wynik: [4., 5., 6.]  ← shape (3,)</span>`,
+    answers:['0'],correct:'0',
+    hint:'axis=0 = wzdłuż osi 0 (↓ wierszy), axis=1 = wzdłuż osi 1 (→ kolumn). Per kolumna to...',
+    exp:'axis=0 = redukuj wzdłuż wierszy (każda kolumna "zwija się" do jednej liczby) → wynik per kolumna. axis=1 = redukuj wzdłuż kolumn → wynik per wiersz. W standaryzacji: X.mean(axis=0) daje wektor μ dla każdej cechy. X.mean(axis=1) daje średnią każdej obserwacji.'
+  },
+  {
+    tag:'Odległość euklidesowa — k-NN',
+    txt:'Oblicz odległość euklidesową między dwoma kwiatami Iris używając normy różnicy wektorów.',
+    code:
+`a = X_iris[<span class="num">0</span>]    <span class="cmt"># setosa:     [5.1, 3.5, 1.4, 0.2]</span>
+b = X_iris[<span class="num">50</span>]   <span class="cmt"># versicolor: [7.0, 3.2, 4.7, 1.4]</span>
+
+<span class="cmt"># Odległość euklidesowa = norma RÓŻNICY:</span>
+dist = np.linalg.<span class="fn">norm</span>(a {{BLANK:1}} b)
+<span class="fn">print</span>(dist)   <span class="cmt"># ≈ 3.9</span>`,
+    answers:['-'],correct:'-',
+    hint:'Odległość między punktami = długość wektora różnicy. ||a - b||₂. Co wstawiasz między a i b?',
+    exp:'dist(a,b) = ||a - b||₂ = sqrt(Σ(aᵢ-bᵢ)²). W k-NN obliczamy to dla każdej pary (test, train): dists = np.linalg.norm(X_train - x_new, axis=1) — broadcasting (n_train,4) - (4,) = (n_train,4), potem norm wzdłuż axis=1. Efekt: wektor (n_train,) odległości jedną linijką.'
+  },
+  {
+    tag:'Macierz kowariancji',
+    txt:'Oblicz macierz kowariancji ręcznie używając mnożenia macierzowego (bez np.cov).',
+    code:
+`X_c = X_iris - X_iris.<span class="fn">mean</span>(axis=<span class="num">0</span>)  <span class="cmt"># centrowanie</span>
+n = X_c.shape[<span class="num">0</span>]              <span class="cmt"># liczba obserwacji = 150</span>
+
+<span class="cmt"># Σ = (X_c^T @ X_c) / (n - 1)  ← korekcja Bessela</span>
+cov = (X_c.{{BLANK:1}} {{BLANK:1}} X_c) / (n - <span class="num">1</span>)
+<span class="cmt"># shape: (4, 4) — symetryczna!</span>`,
+    answers:['t @','T @'],correct:'T @',
+    hint:'Transpozycja X_c, a potem operator mnożenia macierzowego. X_c.__ __ X_c — dwa symbole.',
+    exp:'Macierz kowariancji Σ = X_cᵀX_c/(n-1). X_c.T = transpozycja (4,150), X_c = (150,4), wynik: (4,4). n-1 to korekcja Bessela — nieobciążony estymator wariancji. Weryfikacja: np.allclose(cov, np.cov(X_iris, rowvar=False)) == True.'
+  },
+  {
+    tag:'Wzór normalny — regresja',
+    txt:'Zaimplementuj wzór normalny regresji liniowej: <code>w* = (XᵀX)⁻¹ Xᵀ y</code>.',
+    code:
+`<span class="cmt"># Rozwiązanie analityczne regresji liniowej</span>
+X_ext = <span class="fn">np.column_stack</span>([X_train, <span class="fn">np.ones</span>(<span class="fn">len</span>(X_train))])
+
+<span class="cmt"># w* = (X^T X)^-1  X^T  y</span>
+w_star = np.linalg.{{BLANK:3}}(X_ext.T @ X_ext) @ X_ext.T @ y_train
+<span class="cmt"># slope = w_star[:-1],  intercept = w_star[-1]</span>`,
+    answers:['inv'],correct:'inv',
+    hint:'Funkcja np.linalg.__ obliczająca macierz odwrotną A⁻¹ spełniającą A @ A⁻¹ = I.',
+    exp:'np.linalg.inv(A) oblicza macierz odwrotną. Wzór normalny = czysta algebra liniowa: transpose + matmul + inverse. Uwaga: dla dużych macierzy linalg.solve(A, b) jest numerycznie stabilniejsze niż inv(A)@b. W sklearn: LinearRegression() używa SVD-based approach, nie inv() bezpośrednio.'
+  },
+  {
+    tag:'Cosine similarity',
+    txt:'Oblicz cosine similarity między dwoma wektorami dokumentów.',
+    code:
+`doc_a = <span class="fn">np.array</span>([<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>])  <span class="cmt"># TF wektory</span>
+doc_b = <span class="fn">np.array</span>([<span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>])
+
+<span class="cmt"># cos_sim = a·b / (||a||₂ · ||b||₂)</span>
+cos_sim = (doc_a @ doc_b) / (
+    np.linalg.{{BLANK:4}}(doc_a) * np.linalg.<span class="fn">norm</span>(doc_b)
+)
+<span class="fn">print</span>(cos_sim)   <span class="cmt"># ∈ [-1, 1]</span>`,
+    answers:['norm'],correct:'norm',
+    hint:'Ta sama funkcja co do obliczania norm. Cosine sim = dot / (||a|| * ||b||).',
+    exp:'Cosine similarity = cos(θ) = a·b / (||a||·||b||) ∈ [-1,1]. Niezależna od długości wektorów! Zastosowania: podobieństwo dokumentów (NLP), rekomendacje, semantic search, embeddings w Transformerach. W sklearn: cosine_similarity(X) z sklearn.metrics.pairwise.'
+  },
+  {
+    tag:'float32 — Green IT',
+    txt:'Zmniejsz zużycie pamięci o 50% konwertując tablicę float64 na float32.',
+    code:
+`data = <span class="fn">np.random.rand</span>(<span class="num">1000</span>, <span class="num">1000</span>)   <span class="cmt"># float64: 7.6 MB</span>
+<span class="fn">print</span>(data.dtype)   <span class="cmt"># float64</span>
+
+<span class="cmt"># Konwersja → 50% mniej pamięci, ~identyczne wyniki ML</span>
+data_small = data.astype(np.{{BLANK:7}})
+<span class="fn">print</span>(data_small.nbytes / <span class="num">1024</span>**<span class="num">2</span>)   <span class="cmt"># 3.8 MB</span>`,
+    answers:['float32'],correct:'float32',
+    hint:'Typ danych zajmujący 4 bajty (zamiast 8 dla float64). Prefiks float, potem liczba bitów.',
+    exp:'float32 (4B) vs float64 (8B) → 50% mniej pamięci i szybsze operacje na GPU. W większości ML wystarczy float32 — PyTorch/TensorFlow domyślnie używają float32 na GPU. Kiedy potrzeba float64: statystyki (precyzja numeryczna), współczynniki regresji, obliczenia naukowe.'
+  },
+  {
+    tag:'argsort — k-NN',
+    txt:'Znajdź indeksy 5 najbliższych sąsiadów (k-NN) — posortuj odległości i weź pierwsze k.',
+    code:
+`<span class="cmt"># Odległości do wszystkich train obserwacji</span>
+dists = np.linalg.<span class="fn">norm</span>(X_train - x_new, axis=<span class="num">1</span>)
+<span class="cmt"># dists.shape = (n_train,)</span>
+
+<span class="cmt"># Indeksy 5 najmniejszych odległości:</span>
+k = <span class="num">5</span>
+k_indices = dists.{{BLANK:7}}()[:k]
+k_labels  = y_train[k_indices]  <span class="cmt"># etykiety sąsiadów</span>`,
+    answers:['argsort'],correct:'argsort',
+    hint:'Metoda NumPy zwracająca INDEKSY sortowania (nie same wartości). Posortuje od najmniejszego.',
+    exp:'dists.argsort() zwraca indeksy od najmniejszej do największej odległości. [:k] bierze pierwsze k. Następnie y_train[k_indices] pobiera etykiety k najbliższych. Voting: np.bincount(k_labels).argmax() → najczęstsza klasa = predykcja. Taki k-NN od zera jest identyczny z sklearn.KNeighborsClassifier.'
+  },
+];
+
+let cur=0, score=0, answers=[], done=false;
+
+function renderBlank(code, idx){
+  return code.replace(/\{\{BLANK:(\d+)\}\}/g, (_,n)=>{
+    const w = parseInt(n)*9+18;
+    return `<span class="blank-wrap">`+
+      `<input class="blank-input" id="bl-${idx}" type="text" `+
+      `style="width:${w}px" autocomplete="off" autocorrect="off" `+
+      `autocapitalize="off" spellcheck="false" `+
+      `placeholder="${'_'.repeat(Math.max(parseInt(n)-1,2))}" `+
+      `onkeydown="if(event.key==='Enter')checkAnswer()">`+
+      `<span class="correct-label" id="cl-${idx}"></span></span>`;
+  });
+}
+
+function render(){
+  const q=Q[cur];
+  document.getElementById('qnum').textContent=cur+1;
+  document.getElementById('qtag').textContent=q.tag;
+  document.getElementById('qtxt').innerHTML=q.txt;
+  document.getElementById('cbox').innerHTML=renderBlank(q.code,cur);
+  document.getElementById('hbox').className='hint-box';
+  document.getElementById('hbox').textContent='';
+  document.getElementById('fb').className='fb';
+  document.getElementById('hbtn').disabled=false;
+  document.getElementById('cbtn').disabled=false;
+  document.getElementById('nbtn').disabled=true;
+  document.getElementById('nbtn').textContent=cur<14?'Dalej →':'Zobacz wyniki';
+  document.getElementById('fhint').textContent=`${cur+1}/15 · Enter = sprawdź`;
+  done=false; prog();
+  setTimeout(()=>{const i=document.getElementById(`bl-${cur}`);if(i)i.focus();},80);
+}
+
+function showHint(){
+  document.getElementById('hbox').textContent='💡 '+Q[cur].hint;
+  document.getElementById('hbox').className='hint-box show';
+  document.getElementById('hbtn').disabled=true;
+}
+
+function checkAnswer(){
+  if(done)return;
+  const q=Q[cur];
+  const inp=document.getElementById(`bl-${cur}`);
+  if(!inp)return;
+  const raw=inp.value.trim();
+  if(!raw){inp.focus();return;}
+  done=true;
+  const val=raw.toLowerCase().replace(/\s+/g,' ');
+  const isOk=q.answers.some(a=>a.toLowerCase()===val);
+  inp.disabled=true;
+  inp.classList.add(isOk?'ok':'ng');
+  document.getElementById('cbtn').disabled=true;
+  document.getElementById('hbtn').disabled=true;
+  if(!isOk){
+    const lbl=document.getElementById(`cl-${cur}`);
+    if(lbl){lbl.textContent='✓ '+q.correct;lbl.style.display='block';}
+  }
+  if(isOk)score++;
+  answers.push({given:raw,ok:isOk});
+  const fb=document.getElementById('fb');
+  fb.className='fb show '+(isOk?'ok':'ng');
+  document.getElementById('fbico').textContent=isOk?'✓':'✗';
+  document.getElementById('fbtxt').textContent=
+    (isOk?'Dobrze! ':'Niepoprawnie — poprawna odpowiedź: "'+q.correct+'". ')+q.exp;
+  document.getElementById('nbtn').disabled=false;
+  prog();
+}
+
+function next(){if(!done)return;cur++;cur>=Q.length?showScore():render();}
+
+function prog(){
+  const pct=((cur+(done?1:0))/Q.length)*100;
+  document.getElementById('pfill').style.width=Math.max(pct,2)+'%';
+  document.getElementById('plbl').textContent=`Pytanie ${Math.min(cur+1,15)} z 15`;
+  document.getElementById('psco').textContent=
+    (done||cur>0)?`${score} / ${Math.min(cur+(done?1:0),15)}`:'';
+}
+
+function showScore(){
+  document.getElementById('qcard').style.display='none';
+  document.getElementById('sc').style.display='block';
+  document.getElementById('sfin').textContent=score;
+  document.getElementById('pfill').style.width='100%';
+  document.getElementById('plbl').textContent='Quiz zakończony';
+  document.getElementById('psco').textContent=`${score} / 15`;
+  const arc=document.getElementById('sarc'),pct=score/15;
+  arc.style.stroke=pct>=.8?'#3fb950':pct>=.6?'#e3b341':'#f85149';
+  setTimeout(()=>{arc.style.strokeDashoffset=351.9*(1-pct);},80);
+  const grades=[
+    [15,'🏆 Perfekcja!','Wszystkie 15 — NumPy nie ma przed Tobą tajemnic!'],
+    [13,'🥇 Świetnie!','Prawie ideał. Algebra liniowa opanowana!'],
+    [11,'🥈 Bardzo dobrze!','Solidna wiedza. Kilka operacji do powtórzenia.'],
+    [9,'🥉 Dobrze!','Podstawy są. Powtórz sekcje Normy, PCA i SVD.'],
+    [7,'📚 Połowa','Wróć do Lekcja_15_Algebra_Liniowa.ipynb.'],
+    [0,'💪 Czas na powtórkę','Otwórz notebooka L15 i przejedź od początku!'],
+  ];
+  for(const[min,lbl,sub]of grades){
+    if(score>=min){
+      document.getElementById('slbl').textContent=lbl;
+      document.getElementById('ssub').textContent=sub;break;
+    }
+  }
+  const dots=document.getElementById('sdots');dots.innerHTML='';
+  answers.forEach(a=>{const d=document.createElement('div');d.className='sc-dot'+(a.ok?'':' ng');dots.appendChild(d);});
+  const rv=document.getElementById('rvlist');rv.innerHTML='';
+  const wrongs=answers.filter(a=>!a.ok);
+  if(!wrongs.length){rv.innerHTML='<div style="text-align:center;color:var(--green);font-size:14px;padding:10px">🎉 Zero błędów — perfekcja!</div>';return;}
+  answers.forEach((a,i)=>{
+    if(a.ok)return;
+    const q=Q[i];
+    const d=document.createElement('div');d.className='rv-item';
+    d.innerHTML=`<div class="rv-q">Pytanie ${i+1} — ${q.tag}</div>`+
+      `<div>Twoja odpowiedź: <span class="rv-wrong">"${a.given||'(brak)'}"</span>`+
+      ` → poprawna: <span class="rv-right">${q.correct}</span></div>`;
+    rv.appendChild(d);
+  });
+}
+
+function restart(){
+  cur=0;score=0;answers=[];done=false;
+  document.getElementById('qcard').style.display='block';
+  document.getElementById('sc').style.display='none';
+  document.getElementById('sarc').style.strokeDashoffset='351.9';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lekcja 05 – Kolekcje I · Powtórka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f0f4ff;color:#1e1b4b;min-height:100vh;padding:24px 16px}
+.wrap{max-width:860px;margin:0 auto}
+.header{margin-bottom:24px}
+.label{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:4px}
+h1{font-size:26px;font-weight:500;color:#1e1b4b;margin-bottom:4px}
+.subtitle{font-size:14px;color:#6b7280}
+.tabs{display:flex;gap:8px;margin-bottom:24px}
+.tab-btn{padding:9px 20px;border:1px solid #d1d5db;background:#fff;color:#6b7280;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;transition:all .15s}
+.tab-btn.active{background:#f3f4f6;color:#1e1b4b;border-color:#9ca3af;font-weight:500}
+.tab-btn:hover:not(.active){background:#f9fafb}
+
+/* Cards */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:14px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1rem 1.25rem}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f3f4f6}
+.card-head h2{font-size:15px;font-weight:500;color:#1e1b4b}
+.card-icon{font-size:18px}
+
+/* Method rows */
+.m-row{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;padding:6px 0;border-bottom:1px solid #f3f4f6;align-items:start}
+.m-row:last-child{border-bottom:none}
+.m-code{font-family:'JetBrains Mono',monospace;font-size:12px;background:#f3f4f6;padding:2px 6px;border-radius:4px;white-space:nowrap;color:#4338ca}
+.m-desc{font-size:13px;line-height:1.4;color:#374151}
+.m-ex{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9ca3af}
+
+/* Slice grid */
+.slice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:8px}
+.slice-item{background:#f8f9ff;border-radius:8px;padding:8px 10px;border:1px solid #e5e7eb}
+.slice-code{font-family:'JetBrains Mono',monospace;font-size:12px;display:block;margin-bottom:3px;color:#4338ca}
+.slice-desc{font-size:12px;color:#6b7280}
+
+/* Tip */
+.tip{background:#f0f4ff;border-radius:8px;padding:10px 14px;font-size:13px;color:#6b7280;border:1px solid #e0e7ff}
+.tip strong{color:#1e1b4b;font-weight:500}
+
+/* Quiz */
+.q-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.q-meta span{font-size:13px;color:#6b7280}
+.q-meta .pts{font-weight:500}
+.progress{height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:20px}
+.progress-bar{height:4px;background:#639922;border-radius:2px;transition:width .3s}
+.q-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.25rem;margin-bottom:10px}
+.q-text{font-size:16px;font-weight:500;line-height:1.5;color:#1e1b4b}
+pre{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:13px;margin-top:10px;white-space:pre-wrap;color:#4338ca}
+
+/* Options */
+.opt-btn{display:block;width:100%;text-align:left;padding:10px 14px;margin:6px 0;border:1px solid #e5e7eb;background:#fff;color:#1e1b4b;border-radius:8px;cursor:pointer;font-size:14px;line-height:1.5;font-family:inherit;transition:all .12s}
+.opt-btn:hover:not(:disabled){background:#f9fafb;border-color:#d1d5db}
+.opt-btn.correct{background:#EAF3DE;border-color:#639922;color:#27500A}
+.opt-btn.wrong{background:#FCEBEB;border-color:#E24B4A;color:#501313}
+.opt-btn:disabled{cursor:default}
+.opt-letter{display:inline-block;width:22px;height:22px;border-radius:50%;border:1px solid #d1d5db;text-align:center;line-height:22px;font-size:12px;margin-right:8px;vertical-align:middle}
+
+/* Feedback */
+.fb{padding:10px 14px;border-radius:8px;margin-top:8px;display:none}
+.fb.ok{background:#EAF3DE;border:1px solid #639922}
+.fb.err{background:#FCEBEB;border:1px solid #E24B4A}
+.fb-title{font-size:14px;font-weight:500;margin-bottom:3px}
+.fb.ok .fb-title{color:#27500A}
+.fb.err .fb-title{color:#501313}
+.fb-text{font-size:13px}
+.fb.ok .fb-text{color:#3B6D11}
+.fb.err .fb-text{color:#A32D2D}
+
+/* Next button */
+.next-btn{display:none;margin-top:10px;width:100%;padding:10px 14px;border-radius:8px;background:#f3f4f6;border:1px solid #d1d5db;cursor:pointer;font-size:14px;font-weight:500;text-align:left;font-family:inherit;color:#1e1b4b;transition:background .12s}
+.next-btn:hover{background:#e5e7eb}
+
+/* Results */
+.results{text-align:center;padding:2.5rem 1rem 2rem}
+.result-icon{display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:50%;margin-bottom:16px;font-size:36px}
+.result-score{font-size:32px;font-weight:500;color:#1e1b4b;margin-bottom:6px}
+.result-score span{font-size:18px;color:#6b7280;font-weight:400}
+.result-msg{font-size:14px;color:#6b7280;margin-bottom:2rem}
+.result-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.result-btns button{padding:9px 18px;border-radius:8px;background:#f3f4f6;border:1px solid #d1d5db;cursor:pointer;font-size:14px;font-family:inherit;color:#1e1b4b;transition:background .12s}
+.result-btns button:hover{background:#e5e7eb}
+
+#s-quiz{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <p class="label">Python · Lekcja 05</p>
+    <h1>Kolekcje I</h1>
+    <p class="subtitle">Listy i łańcuchy znaków w Pythonie</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="t-cheat" onclick="showTab('cheat')">📋 Ściągawka</button>
+    <button class="tab-btn" id="t-quiz" onclick="showTab('quiz')">🧠 Quiz</button>
+  </div>
+
+  <!-- ŚCIĄGAWKA -->
+  <div id="s-cheat">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-icon">📋</span>
+          <h2>Listy — list</h2>
+        </div>
+        <div id="list-rows"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-icon">✏️</span>
+          <h2>Stringi — str</h2>
+        </div>
+        <div id="str-rows"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-head">
+        <span class="card-icon">✂️</span>
+        <h2>Slicing — wycinanie</h2>
+      </div>
+      <div class="slice-grid" id="slice-grid"></div>
+    </div>
+
+    <div class="tip">
+      💡 <strong>Kluczowa różnica:</strong> lista jest <strong>mutowalna</strong> (można zmieniać zawartość w miejscu), string jest <strong>niemutowalny</strong> (każda operacja zwraca nowy obiekt — oryginał pozostaje bez zmian).
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="s-quiz">
+    <div id="quiz-content"></div>
+  </div>
+
+</div>
+
+<script>
+const LM=[
+  ["append(x)","Dodaje x na końcu listy","lista.append(5)"],
+  ["extend([...])","Dodaje elementy z iterable","lista.extend([4, 5])"],
+  ["insert(i, x)","Wstawia x na pozycji i","lista.insert(0, 'a')"],
+  ["remove(x)","Usuwa pierwsze wystąpienie x","lista.remove(3)"],
+  ["pop(i)","Usuwa i zwraca element (def. ostatni)","lista.pop()"],
+  ["sort()","Sortuje in-place (modyfikuje oryginał!)","lista.sort()"],
+  ["sorted(lista)","Zwraca nową posortowaną listę","sorted(lista)"],
+  ["index(x)","Indeks pierwszego wystąpienia x","lista.index('a')"],
+  ["count(x)","Ile razy x pojawia się w liście","lista.count(1)"],
+  ["len(lista)","Liczba elementów","len(lista)"],
+  ["lista[i]","Dostęp po indeksie (−1 = ostatni)","lista[-1]"],
+  ["del lista[i]","Usuwa element na pozycji i","del lista[0]"],
+];
+const SM=[
+  ["strip()","Usuwa białe znaki z końców","'  hi  '.strip()"],
+  ["upper() / lower()","Wielkie / małe litery","'hi'.upper()"],
+  ["replace(a, b)","Zamienia a na b","'ala'.replace('a','o')"],
+  ["split(sep)","Dzieli string na listę","'a,b'.split(',')"],
+  ["join(lista)","Łączy listę w string","','.join(['a','b'])"],
+  ["startswith(x)","Czy zaczyna się od x?","'ERROR'.startswith('E')"],
+  ["endswith(x)","Czy kończy się na x?","'file.csv'.endswith('.csv')"],
+  ["find(x)","Indeks pierwszego x (−1 jeśli brak)","'hello'.find('l')"],
+  ["count(x)","Ile razy x pojawia się w stringu","'ala'.count('a')"],
+  ["f'...'","Wstawianie zmiennych do stringa","f'Wynik: {acc:.2%}'"],
+  ["len(s)","Długość stringa","len('hello')"],
+  ["s[a:b]","Wycina fragment stringa","'hello'[1:3]"],
+];
+const SL=[
+  ["lista[1:4]","indeksy 1, 2, 3"],
+  ["lista[:3]","pierwsze 3 elementy"],
+  ["lista[2:]","od indeksu 2 do końca"],
+  ["lista[-1]","ostatni element"],
+  ["lista[-3:]","ostatnie 3 elementy"],
+  ["lista[::2]","co drugi element"],
+  ["lista[::-1]","odwrócona lista"],
+  ["lista[1:5:2]","indeksy 1, 3 (krok = 2)"],
+];
+const QS=[
+  {q:"Co robi lista.append(x)?",c:null,o:["Dodaje x na początku listy","Dodaje x na końcu listy","Usuwa x z listy","Liczy ile razy x jest w liście"],a:1,e:"append() zawsze dodaje nowy element na samym końcu listy."},
+  {q:"Jaka jest różnica między append() a extend()?",c:null,o:["Nie ma żadnej różnicy","append dodaje jeden element, extend dodaje elementy z iterable","extend dodaje jeden element, append dodaje elementy z iterable","append zwraca nową listę"],a:1,e:"lista.append([1,2]) doda listę jako JEDEN element. lista.extend([1,2]) doda DWA osobne elementy: 1 i 2."},
+  {q:"Co zwróci poniższy kod?",c:'"hello".upper()',o:['"hello"','"Hello"','"HELLO"','"hELLO"'],a:2,e:"upper() zamienia WSZYSTKIE litery na wielkie."},
+  {q:"Co robi metoda strip()?",c:'"  hello  ".strip()',o:["Usuwa wszystkie spacje z tekstu","Zwraca 'hello' — usuwa białe znaki z końców","Zamienia spacje na podkreślniki","Dzieli string na listę słów"],a:1,e:"strip() usuwa białe znaki (spacje, \\n, \\t) z obu końców stringa. Środka nie dotyka."},
+  {q:"Jaki będzie wynik tego wyrażenia?",c:"[1, 2, 3, 4, 5][1:3]",o:["[1, 2]","[2, 3]","[1, 2, 3]","[3, 4, 5]"],a:1,e:"Slicing [1:3] = od indeksu 1 (włącznie) do 3 (wyłącznie). Indeksy 1 i 2, czyli wartości 2 i 3."},
+  {q:"Co robi lista.pop() bez argumentów?",c:null,o:["Usuwa i zwraca pierwszy element","Usuwa ostatni element bez zwracania","Usuwa i zwraca ostatni element","Czyści całą listę"],a:2,e:"pop() usuwa OSTATNI element i go zwraca. pop(0) usunęłoby pierwszy."},
+  {q:"Stringi w Pythonie są...",c:null,o:["Mutowalne — można je zmieniać w miejscu","Niemutowalne — każda operacja zwraca NOWY string","Zależy od wersji Pythona","Mutowalne tylko dla liter, niemutowalne dla cyfr"],a:1,e:"String jest niemutowalny. s.upper() nie zmienia s — zwraca nowy string. Ważna różnica w porównaniu do list!"},
+  {q:"Co zwróci poniższy kod?",c:'"a,b,c".split(",")',o:['"a b c"','("a", "b", "c")','["a", "b", "c"]','{"a", "b", "c"}'],a:2,e:"split() zawsze zwraca LISTĘ. Argument to separator — tutaj przecinek."},
+  {q:"Jaki będzie wynik?",c:"lista = [1, 2, 3]\nprint(lista[-1])",o:["1","2","3","IndexError"],a:2,e:"Indeks -1 wskazuje na OSTATNI element. Ujemne indeksy liczą od końca."},
+  {q:"Co zwróci poniższy kod?",c:'",".join(["a", "b", "c"])',o:['["a","b","c","a","b","c"]','"a,b,c"','"abc"',"TypeError"],a:1,e:'join() łączy elementy listy wstawiając separator między każdym. Wynik: "a,b,c".'},
+  {q:"Jak wstawić 'x' na początku listy (pozycja 0)?",c:null,o:["lista.append('x', 0)","lista.insert(0, 'x')","lista.add(0, 'x')","lista[0] = 'x'"],a:1,e:"insert(indeks, wartość) wstawia nowy element. lista[0]='x' ZASTĄPIŁOBY istniejący element — nie wstawiłoby nowego!"},
+  {q:"Co zwróci poniższy kod?",c:'"Data Science".lower()',o:['"data science"','"DATA SCIENCE"','"Data science"','"data Science"'],a:0,e:"lower() zamienia WSZYSTKIE litery na małe — bez wyjątków."},
+  {q:"Co robi lista.remove(x)?",c:null,o:["Usuwa element z podanego indeksu","Usuwa PIERWSZE wystąpienie wartości x","Usuwa WSZYSTKIE wystąpienia wartości x","Usuwa ostatni element listy"],a:1,e:"remove(x) szuka wartości x i usuwa jej PIERWSZE wystąpienie. Jeśli x nie istnieje → ValueError."},
+  {q:"Co zwróci poniższy kod?",c:"[1, 2, 3, 4, 5, 6][::2]",o:["[1, 2]","[1, 3, 5]","[2, 4, 6]","[6, 4, 2]"],a:1,e:"[::2] = 'co drugi element od początku'. Indeksy 0, 2, 4 — wartości 1, 3, 5."},
+  {q:"Która metoda sprawdza, czy string zaczyna się od podanego tekstu?",c:null,o:['log.contains("ERROR")','log.startswith("ERROR")','log.begins("ERROR")','"ERROR" in log'],a:1,e:'startswith() sprawdza TYLKO początek. Opcja D też zadziała, ale znajdzie "ERROR" GDZIEKOLWIEK w stringu — nie tylko na początku.'},
+  {q:"Jaka jest różnica między sorted() a sort()?",c:null,o:["sorted() sortuje malejąco, sort() rosnąco","sorted() zwraca NOWĄ listę, sort() modyfikuje oryginał","sort() zwraca nową listę, sorted() modyfikuje oryginał","Nie ma żadnej różnicy"],a:1,e:"Kluczowe! sorted() ZACHOWUJE oryginał i zwraca nową listę. sort() modyfikuje listę in-place i zwraca None."},
+  {q:"Co robi lista.count(x)?",c:null,o:["Zwraca całkowitą liczbę elementów w liście","Zwraca indeks pierwszego x","Liczy ile razy wartość x pojawia się w liście","Sprawdza czy x jest w liście (True/False)"],a:2,e:"count(x) zlicza wystąpienia konkretnej wartości. Do sprawdzenia obecności: 'x in lista'. Do indeksu: lista.index(x)."},
+  {q:"Jaki jest wynik poniższego wyrażenia?",c:"[1, 2, 3, 4, 5][::-1]",o:["[5, 4, 3, 2, 1]","[1, 2, 3, 4, 5]","[5]","Błąd składni"],a:0,e:"[::-1] to klasyczny Python trick — zwraca odwróconą kopię listy. Krok -1 = 'idź od końca do początku'."},
+];
+
+function mkRow(m,d,e){
+  return `<div class="m-row">
+    <code class="m-code">${m}</code>
+    <div><div class="m-desc">${d}</div><code class="m-ex">${e}</code></div>
+  </div>`;
+}
+document.getElementById('list-rows').innerHTML=LM.map(([m,d,e])=>mkRow(m,d,e)).join('');
+document.getElementById('str-rows').innerHTML=SM.map(([m,d,e])=>mkRow(m,d,e)).join('');
+document.getElementById('slice-grid').innerHTML=SL.map(([s,d])=>`
+  <div class="slice-item">
+    <code class="slice-code">${s}</code>
+    <span class="slice-desc">${d}</span>
+  </div>`).join('');
+
+const qs={questions:[],cur:0,score:0,answered:false,started:false};
+
+function showTab(t){
+  document.getElementById('s-cheat').style.display=t==='cheat'?'block':'none';
+  document.getElementById('s-quiz').style.display=t==='quiz'?'block':'none';
+  document.getElementById('t-cheat').className='tab-btn'+(t==='cheat'?' active':'');
+  document.getElementById('t-quiz').className='tab-btn'+(t==='quiz'?' active':'');
+  if(t==='quiz'&&!qs.started) initQuiz();
+}
+
+function initQuiz(){
+  qs.questions=[...QS].sort(()=>Math.random()-.5).slice(0,10);
+  qs.cur=0; qs.score=0; qs.answered=false; qs.started=true;
+  renderQ();
+}
+
+function renderQ(){
+  const {questions,cur,score}=qs;
+  const q=questions[cur]; const n=questions.length;
+  const pct=Math.round(cur/n*100);
+  const isLast=cur===n-1;
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="q-meta">
+      <span>Pytanie ${cur+1} z ${n}</span>
+      <span class="pts">${score} pkt</span>
+    </div>
+    <div class="progress"><div class="progress-bar" style="width:${pct}%"></div></div>
+    <div class="q-card">
+      <p class="q-text">${q.q}</p>
+      ${q.c?`<pre>${q.c}</pre>`:''}
+    </div>
+    <div id="opts">
+      ${q.o.map((opt,i)=>`<button class="opt-btn" id="o${i}" onclick="pick(${i})">
+        <span class="opt-letter">${'ABCD'[i]}</span>${opt}
+      </button>`).join('')}
+    </div>
+    <div class="fb" id="fb">
+      <div class="fb-title" id="fb-title"></div>
+      <div class="fb-text" id="fb-text"></div>
+    </div>
+    <button class="next-btn" id="nxt" onclick="nextQ()">
+      ${isLast?'🏁 Zobacz wynik':'Następne pytanie →'}
+    </button>`;
+}
+
+function pick(i){
+  if(qs.answered) return;
+  qs.answered=true;
+  const q=qs.questions[qs.cur]; const ok=i===q.a;
+  if(ok) qs.score++;
+  for(let k=0;k<4;k++){
+    const b=document.getElementById('o'+k);
+    if(!b) continue;
+    b.disabled=true;
+    if(k===q.a) b.classList.add('correct');
+    else if(k===i&&!ok) b.classList.add('wrong');
+  }
+  const fb=document.getElementById('fb');
+  fb.className='fb '+(ok?'ok':'err');
+  fb.style.display='block';
+  document.getElementById('fb-title').textContent=ok?'Dobrze!':'Nie tym razem.';
+  document.getElementById('fb-text').textContent=q.e;
+  document.getElementById('nxt').style.display='block';
+}
+
+function nextQ(){
+  qs.cur++; qs.answered=false;
+  if(qs.cur>=qs.questions.length) renderDone(); else renderQ();
+}
+
+function renderDone(){
+  const {score,questions}=qs; const n=questions.length; const p=score/n;
+  const [ic,bg]=p>=.8?['🏆','#EAF3DE']:p>=.6?['👍','#E6F1FB']:['📚','#EEEDFE'];
+  const msg=p>=.8?'Materiał opanowany, świetna robota!':p>=.6?'Nieźle! Przejrzyj ściągawkę dla pewności.':'Wróć do ściągawki i spróbuj ponownie.';
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="results">
+      <div class="result-icon" style="background:${bg}">${ic}</div>
+      <div class="result-score">${score}<span> / ${n}</span></div>
+      <p class="result-msg">${msg}</p>
+      <div class="result-btns">
+        <button onclick="initQuiz()">🔄 Spróbuj ponownie</button>
+        <button onclick="showTab('cheat')">📋 Otwórz ściągawkę</button>
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>

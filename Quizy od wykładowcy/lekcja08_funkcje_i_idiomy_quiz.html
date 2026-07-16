@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Lekcja 08 — Funkcje i idiomy</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.19.0/webfont/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F5F7;--surface:#FFFFFF;--surface2:#F8F9FB;
+  --border:#E3E8EF;--border2:#CBD5E1;
+  --text:#0F1721;--text2:#5A6476;--text3:#9AA3B2;
+  --navy:#141D2E;--navy2:#1E2E47;
+  --fn:#7C3AED;--fn-bg:#F5F3FF;--fn-bd:#DDD6FE;--fn-dark:#3B0764;
+  --lm:#0369A1;--lm-bg:#EFF6FF;--lm-bd:#BFDBFE;--lm-dark:#0C4A6E;
+  --cp:#0F766E;--cp-bg:#F0FDFA;--cp-bd:#99F6E4;--cp-dark:#134E4A;
+  --dc:#B45309;--dc-bg:#FFFBEB;--dc-bd:#FDE68A;--dc-dark:#451A03;
+  --ok:#16A34A;--ok-bg:#F0FDF4;--ok-bd:#86EFAC;
+  --err:#DC2626;--err-bg:#FEF2F2;--err-bd:#FECACA;
+  --progress:#7C3AED;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Fira Code',monospace;
+  --r:8px;--rl:12px;
+}
+body{background:var(--bg);font-family:var(--sans);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.hdr{background:var(--navy);padding:1.75rem 2rem 1.5rem;position:relative;overflow:hidden}
+.hdr::after{content:'';position:absolute;right:-40px;top:-40px;width:220px;height:220px;
+  border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+.hdr-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.45);margin-bottom:6px}
+.hdr-title{font-size:26px;font-weight:600;color:#FFF;margin-bottom:4px;letter-spacing:-.02em}
+.hdr-sub{font-size:14px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hdr-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;
+  padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6)}
+
+/* CONTAINER */
+.wrap{max-width:960px;margin:0 auto;padding:1.5rem 1.5rem 3rem}
+
+/* TABS */
+.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--rl);padding:5px;width:fit-content;margin-bottom:1.5rem}
+.tab-btn{padding:7px 20px;border:none;background:transparent;border-radius:var(--r);
+  cursor:pointer;font-size:14px;font-family:var(--sans);font-weight:500;
+  color:var(--text2);transition:all .15s;display:flex;align-items:center;gap:7px}
+.tab-btn i{font-size:16px}
+.tab-btn.active{background:var(--navy);color:#FFF;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.tab-btn:hover:not(.active){background:var(--surface2);color:var(--text)}
+
+/* CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card-head{padding:.9rem 1.1rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.card-head i{font-size:18px}
+.card-head h2{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.card-body{padding:.25rem .5rem .5rem}
+
+.card-fn{border-top:3px solid var(--fn)}
+.card-fn .card-head{background:var(--fn-bg)}
+.card-fn .card-head i{color:var(--fn)}
+.card-fn .card-head h2{color:var(--fn-dark)}
+
+.card-lm{border-top:3px solid var(--lm)}
+.card-lm .card-head{background:var(--lm-bg)}
+.card-lm .card-head i{color:var(--lm)}
+.card-lm .card-head h2{color:var(--lm-dark)}
+
+.card-cp{border-top:3px solid var(--cp)}
+.card-cp .card-head{background:var(--cp-bg)}
+.card-cp .card-head i{color:var(--cp)}
+.card-cp .card-head h2{color:var(--cp-dark)}
+
+.card-dc{border-top:3px solid var(--dc)}
+.card-dc .card-head{background:var(--dc-bg)}
+.card-dc .card-head i{color:var(--dc)}
+.card-dc .card-head h2{color:var(--dc-dark)}
+
+/* METHOD ROWS */
+.mrow{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;
+  padding:7px 6px;border-bottom:1px solid var(--border);align-items:start}
+.mrow:last-child{border-bottom:none}
+.mrow:hover{background:var(--surface2)}
+.mcode{font-family:var(--mono);font-size:11px;font-weight:500;background:var(--surface2);
+  border:1px solid var(--border);padding:2px 7px;border-radius:5px;white-space:nowrap;color:var(--text)}
+.mdesc{font-size:12px;line-height:1.45;color:var(--text);font-weight:500}
+.mex{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:1px;display:block}
+
+/* COMPARISON TABLE */
+.cmp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  overflow:hidden;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.cmp-head{padding:.75rem 1.1rem;background:var(--navy);display:flex;align-items:center;gap:8px}
+.cmp-head i{font-size:16px;color:rgba(255,255,255,.6)}
+.cmp-head h2{font-size:13px;font-weight:600;color:#FFF}
+.cmp-card table{width:100%;border-collapse:collapse;font-size:12px}
+.cmp-card th{padding:7px 12px;text-align:left;font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--text3);
+  background:var(--surface2);border-bottom:1px solid var(--border)}
+.cmp-card td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.cmp-card tr:last-child td{border-bottom:none}
+.cmp-card tr:hover td{background:var(--surface2)}
+.cmp-card td:first-child{font-family:var(--mono);font-weight:600;font-size:11px;color:var(--navy);white-space:nowrap}
+
+/* PITFALL BOX */
+.pitfall{background:linear-gradient(135deg,#FFFBEB,#FEF9E7);border:1px solid #FDE68A;
+  border-left:4px solid #B45309;border-radius:var(--r);padding:.85rem 1.1rem;
+  display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}
+.pitfall i{font-size:18px;color:#B45309;flex-shrink:0;margin-top:1px}
+.pitfall p{font-size:13px;line-height:1.6;color:#451A03}
+.pitfall p strong{font-weight:600}
+.pitfall code{font-family:var(--mono);font-size:12px;background:rgba(255,255,255,.7);
+  padding:1px 6px;border-radius:4px;border:1px solid #FDE68A}
+
+/* QUIZ */
+.quiz-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.quiz-meta span{font-size:13px;color:var(--text2)}
+.quiz-score{font-weight:600;color:var(--text)}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;margin-bottom:1.25rem;overflow:hidden}
+.progress-fill{height:5px;background:var(--progress);border-radius:3px;transition:width .3s ease}
+
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  padding:1.25rem;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.q-text{font-size:16px;font-weight:500;line-height:1.55;color:var(--text);margin-bottom:12px}
+pre{font-family:var(--mono);font-size:13px;background:var(--navy);color:#E2E8F0;
+  border-radius:var(--r);padding:14px 16px;white-space:pre-wrap;line-height:1.6;margin:0 0 12px}
+
+.opt-btn{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;
+  padding:11px 14px;margin:6px 0;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);border-radius:var(--r);
+  cursor:pointer;font-size:14px;font-family:var(--sans);line-height:1.45;
+  transition:border-color .12s,background .12s}
+.opt-btn:hover:not(:disabled){background:var(--surface2);border-color:var(--border2)}
+.opt-btn:disabled{cursor:default}
+.opt-label{min-width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  font-weight:600;flex-shrink:0;color:var(--text2);transition:all .12s;margin-top:1px}
+.opt-btn.correct{background:var(--ok-bg);border-color:var(--ok-bd)}
+.opt-btn.correct .opt-label{background:var(--ok);border-color:var(--ok);color:#FFF}
+.opt-btn.wrong{background:var(--err-bg);border-color:var(--err-bd)}
+.opt-btn.wrong .opt-label{background:var(--err);border-color:var(--err);color:#FFF}
+.opt-code{font-family:var(--mono);font-size:12.5px}
+
+.fb-box{padding:12px 15px;border-radius:var(--r);margin-top:8px;display:flex;gap:10px}
+.fb-box.ok-fb{background:var(--ok-bg);border:1px solid var(--ok-bd)}
+.fb-box.err-fb{background:var(--err-bg);border:1px solid var(--err-bd)}
+.fb-box i{font-size:18px;flex-shrink:0;margin-top:1px}
+.fb-box.ok-fb i{color:var(--ok)}
+.fb-box.err-fb i{color:var(--err)}
+.fb-title{font-size:14px;font-weight:600;margin-bottom:3px}
+.fb-box.ok-fb .fb-title{color:#14532D}
+.fb-box.err-fb .fb-title{color:#7F1D1D}
+.fb-text{font-size:13px;line-height:1.55}
+.fb-box.ok-fb .fb-text{color:#166534}
+.fb-box.err-fb .fb-text{color:#991B1B}
+
+.nxt-btn{display:flex;align-items:center;justify-content:space-between;
+  margin-top:10px;width:100%;padding:11px 16px;border-radius:var(--r);
+  background:var(--navy);color:#FFF;border:none;cursor:pointer;
+  font-size:14px;font-weight:500;font-family:var(--sans);transition:background .12s}
+.nxt-btn:hover{background:var(--navy2)}
+.nxt-btn i{font-size:16px}
+
+/* RESULTS */
+.result-wrap{text-align:center;padding:2.5rem 1rem 2rem}
+.result-icon{width:72px;height:72px;border-radius:50%;display:inline-flex;
+  align-items:center;justify-content:center;margin-bottom:18px}
+.result-icon i{font-size:34px}
+.result-score{font-size:36px;font-weight:600;letter-spacing:-.03em;color:var(--text)}
+.result-score span{font-size:20px;font-weight:400;color:var(--text2)}
+.result-msg{font-size:15px;color:var(--text2);margin:6px 0 2rem;line-height:1.5}
+.result-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.res-btn{padding:10px 22px;border-radius:var(--r);border:1px solid var(--border2);
+  background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;
+  font-family:var(--sans);color:var(--text);transition:background .12s;
+  display:inline-flex;align-items:center;gap:8px}
+.res-btn:hover{background:var(--surface2)}
+.res-btn.primary{background:var(--navy);color:#FFF;border-color:var(--navy)}
+.res-btn.primary:hover{background:var(--navy2)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <p class="hdr-label">🐍 Python · Kurs Data Science</p>
+  <h1 class="hdr-title">Lekcja 08 — Funkcje i idiomy</h1>
+  <div class="hdr-sub">
+    <span class="hdr-pill"><i class="ti ti-book-2"></i> Ściągawka + Quiz</span>
+    <span class="hdr-pill" id="quiz-pill" style="display:none"><i class="ti ti-brain"></i> 10 pytań</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab-btn active" id="t-cheat" onclick="showTab('cheat')">
+      <i class="ti ti-book-2"></i> Ściągawka
+    </button>
+    <button class="tab-btn" id="t-quiz" onclick="showTab('quiz')">
+      <i class="ti ti-brain"></i> Quiz
+    </button>
+  </div>
+
+  <!-- ŚCIĄGAWKA -->
+  <div id="s-cheat">
+    <div class="cards-grid">
+      <div class="card card-fn">
+        <div class="card-head"><i class="ti ti-function"></i><h2>Funkcje — def</h2></div>
+        <div class="card-body" id="fn-rows"></div>
+      </div>
+      <div class="card card-lm">
+        <div class="card-head"><i class="ti ti-bolt"></i><h2>Lambda</h2></div>
+        <div class="card-body" id="lm-rows"></div>
+      </div>
+      <div class="card card-cp">
+        <div class="card-head"><i class="ti ti-list-check"></i><h2>Comprehensions</h2></div>
+        <div class="card-body" id="cp-rows"></div>
+      </div>
+      <div class="card card-dc">
+        <div class="card-head"><i class="ti ti-braces"></i><h2>Dict &amp; Set comp.</h2></div>
+        <div class="card-body" id="dc-rows"></div>
+      </div>
+    </div>
+
+    <div class="cmp-card">
+      <div class="cmp-head"><i class="ti ti-table"></i><h2>Porównanie technik</h2></div>
+      <div style="overflow-x:auto"><table id="cmp-table"></table></div>
+    </div>
+
+    <div class="pitfall">
+      <i class="ti ti-alert-triangle"></i>
+      <p><strong>Pułapka:</strong> Lambda to skrót — nie zastępuje <code>def</code> gdy potrzebujesz docstringa, kilku linii lub debugowania. <code>filter()</code> i <code>map()</code> zwracają <strong>obiekty leniwe</strong> — musisz owinąć je w <code>list()</code> żeby zobaczyć wynik.</p>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="s-quiz" style="display:none">
+    <div id="quiz-content"></div>
+  </div>
+</div>
+
+<script>
+// ─── ŚCIĄGAWKA DATA ─────────────────────────────────────────────────────────
+const FN_M=[
+  ["def f(a, b):","Definicja funkcji z parametrami","def oblicz_bmi(waga, wzrost):"],
+  ["return wart","Zwróć wartość (kończy funkcję)","return waga / wzrost**2"],
+  ["def f(x, n=2):","Parametr domyślny","def potega(x, n=2): return x**n"],
+  ["return a, b, c","Zwróć wiele wartości (tuple)","return suma, srednia, min_val"],
+  ["a, b = f()","Rozpakowanie tuple z return","sr, med = statystyki(dane)"],
+  ['"""docstring"""',"Dokumentacja funkcji","\"\"\"Oblicza BMI. Args: ...\"\"\""],
+];
+const LM_M=[
+  ["lambda x: wyr","Funkcja anonimowa, 1 argument","lambda x: x**2"],
+  ["lambda x,y: wyr","Lambda z wieloma argumentami","lambda w,h: w/h**2"],
+  ["sorted(lst, key=λ)","Sortowanie po kluczu","sorted(s, key=lambda x: x[1])"],
+  ["map(λ, seq)","Zastosuj funkcję do każdego el.","list(map(lambda c: c*1.23, lst))"],
+  ["filter(λ, seq)","Filtruj elementy spełniające λ","list(filter(lambda x: x>0, l))"],
+  ["map+filter","Łączenie: najpierw filtr, potem map","list(map(f, filter(g, lst)))"],
+];
+const CP_M=[
+  ["[wyr for x in seq]","List comp. — transformacja","[x**2 for x in range(10)]"],
+  ["[wyr for x in seq if C]","List comp. — filtr","[x for x in l if x>0]"],
+  ["[A if C else B for x]","List comp. — if/else (transformacja)","['ok' if x>0 else 'err' for x in l]"],
+  ["[el for w in M for el in w]","Flatten — spłaszczenie macierzy","[el for row in matrix for el in row]"],
+  ["[[wyr for j in r] for i in r]","Zagnieżdżony comp. (macierz)","[[i*j for j in r] for i in r]"],
+  ["(wyr for x in seq)","Generator — leniwy, oszczędza RAM","sum(x**2 for x in range(1_000_000))"],
+];
+const DC_M=[
+  ["{k: v for k,v in ...}","Dict comprehension — mapowanie","{p: c for p,c in zip(prod,ceny)}"],
+  ["{k: v ... if C}","Dict comp. — filtr słownika","{k:v for k,v in d.items() if v>500}"],
+  ["{wyr for x in seq}","Set comp. — unikalne elementy","{x.upper() for x in zakupy}"],
+  ["zip(a, b)","Para list → pary do dict comp.","zip(nazwy, wartosci)"],
+];
+const CMP_H=["Technika","Składnia","Kiedy używać","Wydajność / RAM"];
+const CMP_D=[
+  ["def","def f(x): return x*2","logika wielokrotnego użytku, złożona","pełna czytelność, debugowalność"],
+  ["lambda","lambda x: x*2","jednorazowa, prosta transformacja","krótki zapis, brak docstringa"],
+  ["list comp.","[x*2 for x in lst]","transformacja / filtr listy","~10–30% szybszy niż for+append"],
+  ["dict comp.","{k:v for k,v in items}","tworzenie/filtrowanie słownika","czytelniejszy niż petla+update"],
+  ["generator","(x*2 for x in lst)","duże zbiory, potok danych","stałe ~128 B niezależnie od n"],
+];
+
+function mkRow(m,d,e){
+  return `<div class="mrow">
+    <code class="mcode">${m}</code>
+    <div><div class="mdesc">${d}</div><code class="mex">${e}</code></div>
+  </div>`;
+}
+document.getElementById('fn-rows').innerHTML=FN_M.map(([m,d,e])=>mkRow(m,d,e)).join('');
+document.getElementById('lm-rows').innerHTML=LM_M.map(([m,d,e])=>mkRow(m,d,e)).join('');
+document.getElementById('cp-rows').innerHTML=CP_M.map(([m,d,e])=>mkRow(m,d,e)).join('');
+document.getElementById('dc-rows').innerHTML=DC_M.map(([m,d,e])=>mkRow(m,d,e)).join('');
+
+const tbl=document.getElementById('cmp-table');
+tbl.innerHTML=`<thead><tr>${CMP_H.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+<tbody>${CMP_D.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+
+// ─── QUIZ DATA ───────────────────────────────────────────────────────────────
+const QS=[
+  // ── def / return ──
+  {
+    topic:"def / return",
+    q:"Co zwróci poniższe wywołanie?",
+    c:`def statystyki(dane):
+    return sum(dane), min(dane), max(dane)
+
+a, b, c = statystyki([3, 1, 4, 1, 5])
+print(b)`,
+    o:["3","1","5","(1, 1, 5)"],
+    a:1,
+    e:"Funkcja zwraca tuple: (suma=14, min=1, max=5). Rozpakowujemy: a=14, b=1, c=5. print(b) wypisuje min → 1."
+  },
+  // ── parametry domyślne ──
+  {
+    topic:"parametry domyślne",
+    q:"Jaki będzie wynik wywołania normalizuj(dane)?",
+    c:`def normalizuj(dane, zaokraglenie=2):
+    mn, mx = min(dane), max(dane)
+    return [round((x - mn)/(mx - mn), zaokraglenie) for x in dane]
+
+print(normalizuj([0, 5, 10]))`,
+    o:["[0, 5, 10]","[0.0, 0.5, 1.0]","[0.00, 0.50, 1.00]","TypeError"],
+    a:1,
+    e:"Min-max normalizacja: (x-0)/(10-0). Wyniki: 0/10=0.0, 5/10=0.5, 10/10=1.0. round(..., 2) nie zmienia wartości, które już mają ≤2 miejsca po przecinku."
+  },
+  // ── lambda podstawy ──
+  {
+    topic:"lambda",
+    q:"Co wydrukuje poniższy kod?",
+    c:`bmi = lambda waga, wzrost: round(waga / wzrost**2, 1)
+print(bmi(75, 1.80))`,
+    o:["23.148...","23.1","23.2","TypeError: lambda przyjmuje 1 argument"],
+    a:1,
+    e:"Lambda z dwoma argumentami: 75 / 1.80² = 75 / 3.24 ≈ 23.148... → round(..., 1) = 23.1. Lambda może mieć dowolną liczbę argumentów."
+  },
+  // ── sorted + lambda ──
+  {
+    topic:"sorted() + lambda",
+    q:"Które wywołanie posortuje produkty malejąco według ceny?",
+    c:`produkty = [("mysz", 89), ("laptop", 2999), ("monitor", 899)]`,
+    o:[
+      `sorted(produkty, key=lambda p: p[1])`,
+      `sorted(produkty, key=lambda p: p[1], reverse=True)`,
+      `sorted(produkty, key=lambda p: p[0], reverse=True)`,
+      `produkty.sort(key=lambda p: p[1], reverse=False)`,
+    ],
+    a:1,
+    e:"key=lambda p: p[1] wybiera cenę (drugi element tuple). reverse=True daje porządek malejący. Opcja A daje rosnąco, C sortuje po nazwie, D też sortuje rosnąco (reverse=False to domyślne)."
+  },
+  // ── map ──
+  {
+    topic:"map()",
+    q:"Co zwróci poniższy kod?",
+    c:`ceny_netto = [100, 200, 500]
+wynik = map(lambda c: c * 1.23, ceny_netto)
+print(type(wynik))`,
+    o:["<class 'list'>","<class 'map'>","<class 'generator'>","<class 'tuple'>"],
+    a:1,
+    e:"map() zwraca obiekt map (leniwy iterator), nie listę. Żeby uzyskać listę, trzeba owinąć w list(): list(map(...)). To oszczędza pamięć gdy wynik nie jest od razu potrzebny."
+  },
+  // ── filter ──
+  {
+    topic:"filter()",
+    q:"Ile elementów znajdzie się w liście zdane?",
+    c:`wyniki = [45, 67, 89, 34, 78, 92, 56, 81, 43, 88]
+zdane = list(filter(lambda w: w >= 60, wyniki))
+print(len(zdane))`,
+    o:["4","5","6","7"],
+    a:2,
+    e:"Warunek w >= 60 spełniają: 67, 89, 78, 92, 81, 88 → 6 elementów. 45, 34, 56, 43 nie spełniają (56 < 60)."
+  },
+  // ── list comp z if/else ──
+  {
+    topic:"list comprehension — if/else",
+    q:"Co wydrukuje poniższy kod?",
+    c:`temps = [36.5, 38.2, 37.0, 39.5]
+kat = ["gorączka" if t >= 38.0 else "norma" for t in temps]
+print(kat.count("gorączka"))`,
+    o:["1","2","3","4"],
+    a:1,
+    e:"38.2 >= 38.0 → 'gorączka', 39.5 >= 38.0 → 'gorączka'. Pozostałe (36.5, 37.0) to 'norma'. count('gorączka') = 2."
+  },
+  // ── flatten ──
+  {
+    topic:"zagnieżdżony comprehension",
+    q:"Które wyrażenie poprawnie spłaszcza macierz do jednej listy?",
+    c:`macierz = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]`,
+    o:[
+      `[el for el in wiersz for wiersz in macierz]`,
+      `[el for wiersz in macierz for el in wiersz]`,
+      `[[el for el in wiersz] for wiersz in macierz]`,
+      `[macierz[i][j] for i, j in macierz]`,
+    ],
+    a:1,
+    e:"Kolejność pętli w flatten: najpierw iterujemy po wierszach (for wiersz in macierz), potem po elementach (for el in wiersz). Opcja A odwraca kolejność → NameError. Opcja C tworzy listę list (nie spłaszcza)."
+  },
+  // ── dict comprehension ──
+  {
+    topic:"dict comprehension",
+    q:"Co zawierać będzie słownik drogie?",
+    c:`cennik = {"laptop": 2999, "mysz": 89, "monitor": 899, "klawiatura": 249}
+drogie = {k: v for k, v in cennik.items() if v > 500}
+print(drogie)`,
+    o:[
+      `{"laptop": 2999}`,
+      `{"laptop": 2999, "monitor": 899}`,
+      `{"mysz": 89, "klawiatura": 249}`,
+      `{"laptop": 2999, "monitor": 899, "klawiatura": 249}`,
+    ],
+    a:1,
+    e:"Filtr v > 500: laptop (2999 > 500 ✓), mysz (89 ✗), monitor (899 > 500 ✓), klawiatura (249 ✗). Wynik: {'laptop': 2999, 'monitor': 899}."
+  },
+  // ── generator vs list ──
+  {
+    topic:"generator vs list",
+    q:"Które stwierdzenie o generatorze jest PRAWDZIWE?",
+    c:`lista =     [i**2 for i in range(1_000_000)]
+generator = (i**2 for i in range(1_000_000))`,
+    o:[
+      "Generator i lista zajmują tyle samo pamięci",
+      "Generator oblicza wartości na żądanie — zajmuje ~128 bajtów niezależnie od rozmiaru",
+      "Generatora nie można przekazać do funkcji sum()",
+      "Generator jest zawsze wolniejszy niż lista",
+    ],
+    a:1,
+    e:"Generator (nawiasy okrągłe) to obiekt leniwy: przechowuje tylko logikę, nie wartości. Zajmuje stałe ~128 B. Lista dla 1M elementów to ~8 MB. sum(generator) działa poprawnie — sum() pobiera elementy po jednym."
+  },
+  // ── zwracanie wielu wartości ──
+  {
+    topic:"zwracanie wielu wartości",
+    q:"Jaki typ ma zmienna wynik po wykonaniu kodu?",
+    c:`def minmax(dane):
+    return min(dane), max(dane)
+
+wynik = minmax([3, 1, 4, 1, 5, 9])
+print(type(wynik))`,
+    o:["<class 'list'>","<class 'tuple'>","<class 'dict'>","<class 'set'>"],
+    a:1,
+    e:"return a, b to skrócony zapis return (a, b). Python automatycznie pakuje wiele wartości w tuple. Żeby rozpakować: mn, mx = minmax(dane)."
+  },
+  // ── map + filter pipeline ──
+  {
+    topic:"map() + filter() — pipeline",
+    q:"Co wydrukuje poniższy kod?",
+    c:`czasy_ms = [120, 2000, 134, 98, 3500, 156]
+poprawne = filter(lambda t: t <= 500, czasy_ms)
+w_sek    = list(map(lambda t: t / 1000, poprawne))
+print(len(w_sek))`,
+    o:["6","4","3","2"],
+    a:1,
+    e:"filter usuwa wartości > 500: zostają [120, 134, 98, 156] → 4 elementy. map dzieli każdy przez 1000. Wynik: [0.12, 0.134, 0.098, 0.156] → len = 4."
+  },
+  // ── set comprehension ──
+  {
+    topic:"set comprehension",
+    q:"Ile elementów będzie w zbiorze kategorie?",
+    c:`wieki = [25, 32, 18, 45, 23, 35, 52, 28, 41, 22, 38]
+kategorie = {(w // 10) * 10 for w in wieki}`,
+    o:["11","5","4","6"],
+    a:2,
+    e:"(w//10)*10 zaokrągla do dziesiątek: 10, 20, 20, 40, 20, 30, 50, 20, 40, 20, 30. Unikalne wartości: {10, 20, 30, 40, 50} → 5 elementów. Set automatycznie usuwa duplikaty."
+  },
+  // ── parametry domyślne pułapka ──
+  {
+    topic:"parametry domyślne",
+    q:"Która deklaracja funkcji jest POPRAWNA — oblicza BMI z domyślną jednostką 'metryczna'?",
+    c:null,
+    o:[
+      `def bmi(waga, wzrost, jednostka = "metryczna"):`,
+      `def bmi(jednostka = "metryczna", waga, wzrost):`,
+      `def bmi(waga = 70, wzrost, jednostka):`,
+      `def bmi(waga, wzrost = 1.75, jednostka):`,
+    ],
+    a:0,
+    e:"Parametry z domyślnymi wartościami MUSZĄ być na końcu listy argumentów. Opcje B i C stawiają parametr z wartością domyślną przed parametrami bez — to SyntaxError. Opcja D też narusza tę zasadę (wzrost z domyślną, a jednostka bez)."
+  },
+  // ── lambda feature engineering ──
+  {
+    topic:"lambda — feature engineering",
+    q:"Co zwróci poniższe wywołanie?",
+    c:`dodaj_fe = lambda k: {**k, "oszczednosc": k["dochod"] - k["wydatki"]}
+klient = {"id": 1, "dochod": 5000, "wydatki": 3200}
+print(dodaj_fe(klient)["oszczednosc"])`,
+    o:["5000","3200","1800","{'id': 1, 'dochod': 5000, 'wydatki': 3200, 'oszczednosc': 1800}"],
+    a:2,
+    e:"{**k, 'oszczednosc': ...} tworzy nowy słownik z rozpakowaniem wszystkich kluczy z k plus nowy klucz. 5000 - 3200 = 1800. dodaj_fe(klient)['oszczednosc'] wyciąga tylko tę wartość → 1800."
+  },
+];
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function showTab(t){
+  document.getElementById('s-cheat').style.display=t==='cheat'?'block':'none';
+  document.getElementById('s-quiz').style.display=t==='quiz'?'block':'none';
+  document.getElementById('t-cheat').className='tab-btn'+(t==='cheat'?' active':'');
+  document.getElementById('t-quiz').className='tab-btn'+(t==='quiz'?' active':'');
+  document.getElementById('quiz-pill').style.display=t==='quiz'?'inline-flex':'none';
+  if(t==='quiz'&&!qs.started) initQuiz();
+}
+
+// ─── QUIZ STATE ───────────────────────────────────────────────────────────────
+const qs={questions:[],cur:0,score:0,answered:false,started:false};
+
+function initQuiz(){
+  qs.questions=[...QS].sort(()=>Math.random()-.5).slice(0,10);
+  qs.cur=0;qs.score=0;qs.answered=false;qs.started=true;
+  renderQ();
+}
+
+function renderQ(){
+  const {questions,cur,score}=qs;
+  const q=questions[cur];const n=questions.length;
+  const pct=Math.round(cur/n*100);const isLast=cur===n-1;
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="quiz-meta">
+      <span>Pytanie <strong style="color:var(--text)">${cur+1}</strong> z ${n}
+        <span style="margin-left:8px;font-size:11px;background:var(--fn-bg);color:var(--fn);
+          border:1px solid var(--fn-bd);padding:1px 8px;border-radius:10px;font-weight:600">
+          ${q.topic}
+        </span>
+      </span>
+      <span class="quiz-score"><i class="ti ti-star" style="font-size:14px;vertical-align:-2px;color:#F59E0B"></i> ${score} pkt</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="q-card">
+      <p class="q-text">${q.q}</p>
+      ${q.c?`<pre>${q.c}</pre>`:''}
+    </div>
+    <div id="opts">
+      ${q.o.map((opt,i)=>`
+        <button class="opt-btn" id="o${i}" onclick="pick(${i})">
+          <span class="opt-label">${'ABCD'[i]}</span>
+          <span class="${opt.includes('lambda')||opt.includes('def ')||opt.includes('{')? 'opt-code':''}">${opt}</span>
+        </button>`).join('')}
+    </div>
+    <div id="fb" style="display:none"></div>
+    <button id="nxt" onclick="nextQ()" style="display:none" class="nxt-btn">
+      <span>${isLast?'Zobacz wynik':'Następne pytanie'}</span>
+      <i class="ti ${isLast?'ti-flag':'ti-arrow-right'}"></i>
+    </button>`;
+}
+
+function pick(i){
+  if(qs.answered)return;
+  qs.answered=true;
+  const q=qs.questions[qs.cur];const ok=i===q.a;
+  if(ok)qs.score++;
+  for(let k=0;k<4;k++){
+    const b=document.getElementById('o'+k);if(!b)continue;
+    b.disabled=true;
+    if(k===q.a)b.classList.add('correct');
+    else if(k===i&&!ok)b.classList.add('wrong');
+  }
+  const fb=document.getElementById('fb');
+  fb.style.display='block';
+  fb.innerHTML=`<div class="fb-box ${ok?'ok-fb':'err-fb'}">
+    <i class="ti ${ok?'ti-circle-check':'ti-circle-x'}"></i>
+    <div><p class="fb-title">${ok?'Dobrze!':'Nie tym razem.'}</p>
+    <p class="fb-text">${q.e}</p></div>
+  </div>`;
+  document.getElementById('nxt').style.display='flex';
+}
+
+function nextQ(){
+  qs.cur++;qs.answered=false;
+  if(qs.cur>=qs.questions.length)renderDone();else renderQ();
+}
+
+function renderDone(){
+  const {score,questions}=qs;const n=questions.length;const p=score/n;
+  const [ic,bg,tc]=p>=.8?['ti-trophy','#FEF9C3','#854D0E']:p>=.6?['ti-thumb-up','#DBEAFE','#1E3A8A']:['ti-refresh','#EDE9FE','#4C1D95'];
+  const msg=p>=.8?'Funkcje i idiomy opanowane! Czas na NumPy i Pandas.':p>=.6?'Nieźle! Powtórz lambdy i comprehensions.':'Wróć do ściągawki — szczególnie map(), filter() i dict comp.';
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="result-wrap">
+      <div class="result-icon" style="background:${bg}"><i class="ti ${ic}" style="color:${tc}"></i></div>
+      <div class="result-score">${score}<span> / ${n}</span></div>
+      <p class="result-msg">${msg}</p>
+      <div class="result-btns">
+        <button onclick="initQuiz()" class="res-btn primary"><i class="ti ti-refresh"></i> Spróbuj ponownie</button>
+        <button onclick="showTab('cheat')" class="res-btn"><i class="ti ti-book-2"></i> Ściągawka</button>
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>

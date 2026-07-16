@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Lekcja 07 — Uzupełnij kod</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.19.0/webfont/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F5F7;--surface:#FFFFFF;--surface2:#F0F2F5;
+  --border:#E3E8EF;--border2:#CBD5E1;
+  --text:#0F1721;--text2:#5A6476;--text3:#9AA3B2;
+  --navy:#141D2E;--navy2:#1E2E47;--navy3:#263548;
+  --code-bg:#181F2E;--code-text:#E2E8F0;
+  --blank-bg:#1E3A5F;--blank-border:#60A5FA;--blank-text:#93C5FD;
+  --blank-focus-bg:#1D3461;--blank-focus-border:#3B82F6;
+  --ok:#16A34A;--ok-bg:#F0FDF4;--ok-bd:#86EFAC;--ok-text:#14532D;
+  --err:#DC2626;--err-bg:#FEF2F2;--err-bd:#FECACA;--err-text:#7F1D1D;
+  --warn:#D97706;--warn-bg:#FFFBEB;--warn-bd:#FDE68A;--warn-text:#451A03;
+  --accent:#3B82F6;--accent2:#2563EB;
+  --progress:#3B82F6;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Fira Code',monospace;
+  --r:8px;--rl:12px;
+}
+body{background:var(--bg);font-family:var(--sans);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.hdr{background:var(--navy);padding:1.75rem 2rem 1.5rem;position:relative;overflow:hidden}
+.hdr::before{content:'';position:absolute;left:-60px;bottom:-60px;width:280px;height:280px;
+  border-radius:50%;background:rgba(59,130,246,.07);pointer-events:none}
+.hdr::after{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;
+  border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none}
+.hdr-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-bottom:6px}
+.hdr-title{font-size:26px;font-weight:600;color:#FFF;margin-bottom:4px;letter-spacing:-.02em}
+.hdr-sub{font-size:14px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hdr-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;
+  padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6)}
+
+/* WRAP */
+.wrap{max-width:780px;margin:0 auto;padding:1.5rem 1.5rem 4rem}
+
+/* PROGRESS */
+.prog-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:14px}
+.prog-label{font-size:13px;font-weight:500;color:var(--text2);white-space:nowrap}
+.prog-bar-outer{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-bar-inner{height:6px;background:var(--accent);border-radius:3px;transition:width .4s ease}
+.prog-count{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;min-width:40px;text-align:right}
+
+/* EXERCISE CARD */
+.ex-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;
+  transition:border-color .2s}
+.ex-card.done-ok{border-color:var(--ok-bd);box-shadow:0 0 0 2px rgba(22,163,74,.08)}
+.ex-card.done-err{border-color:var(--err-bd);box-shadow:0 0 0 2px rgba(220,38,38,.08)}
+
+.ex-head{padding:.85rem 1.15rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:10px}
+.ex-num{min-width:26px;height:26px;border-radius:50%;background:var(--navy);color:#FFF;
+  font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ex-meta{flex:1}
+.ex-topic{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:3px}
+.ex-q{font-size:14px;font-weight:500;line-height:1.55;color:var(--text)}
+.ex-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border2);color:var(--text3);
+  white-space:nowrap;flex-shrink:0;align-self:flex-start;margin-top:1px}
+.ex-badge.b2{background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF}
+.ex-badge.b3{background:#F5F3FF;border-color:#DDD6FE;color:#4C1D95}
+
+/* CODE BLOCK */
+.code-wrap{background:var(--code-bg);padding:1rem 1.25rem;font-family:var(--mono);
+  font-size:13px;line-height:1.75;color:var(--code-text);overflow-x:auto}
+.code-line{display:block;white-space:pre}
+
+/* BLANK INPUT */
+.blank{display:inline-block;position:relative;vertical-align:middle;margin:0 1px}
+.blank input{
+  font-family:var(--mono);font-size:13px;font-weight:500;
+  background:var(--blank-bg);
+  color:var(--blank-text);
+  border:1.5px solid var(--blank-border);
+  border-radius:5px;
+  padding:1px 7px;
+  outline:none;
+  min-width:60px;
+  width:var(--w,80px);
+  transition:border-color .15s,background .15s,box-shadow .15s;
+  text-align:center;
+}
+.blank input:focus{
+  border-color:var(--blank-focus-border);
+  background:var(--blank-focus-bg);
+  box-shadow:0 0 0 3px rgba(59,130,246,.2);
+}
+.blank input.inp-ok{
+  background:#052e16;border-color:#16a34a;color:#86efac;
+  box-shadow:0 0 0 2px rgba(22,163,74,.15);
+}
+.blank input.inp-err{
+  background:#450a0a;border-color:#dc2626;color:#fca5a5;
+  box-shadow:0 0 0 2px rgba(220,38,38,.15);
+}
+.blank input:disabled{cursor:default}
+
+/* FEEDBACK */
+.fb-row{padding:.8rem 1.15rem;border-top:1px solid var(--border);display:none;gap:10px}
+.fb-row.visible{display:flex}
+.fb-row i{font-size:18px;flex-shrink:0;margin-top:1px}
+.fb-ok{background:var(--ok-bg)}
+.fb-ok i{color:var(--ok)}
+.fb-err{background:var(--err-bg)}
+.fb-err i{color:var(--err)}
+.fb-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.fb-ok .fb-title{color:var(--ok-text)}
+.fb-err .fb-title{color:var(--err-text)}
+.fb-text{font-size:12.5px;line-height:1.55;color:var(--text2)}
+.fb-ok .fb-text{color:#166534}
+.fb-err .fb-text{color:#991b1b}
+.show-ans{font-size:12px;text-decoration:underline;cursor:pointer;
+  color:#93c5fd;background:none;border:none;font-family:var(--sans);margin-top:4px;
+  display:inline-block;padding:0}
+.show-ans:hover{color:#bfdbfe}
+
+/* CHECK BTN */
+.ex-foot{padding:.75rem 1.15rem;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface2)}
+.check-btn{padding:7px 18px;border-radius:var(--r);border:none;cursor:pointer;
+  font-size:13px;font-weight:600;font-family:var(--sans);
+  background:var(--navy);color:#FFF;display:inline-flex;align-items:center;gap:7px;
+  transition:background .12s}
+.check-btn:hover{background:var(--navy2)}
+.check-btn:disabled{background:var(--border2);color:var(--text3);cursor:default}
+.hint-txt{font-size:12px;color:var(--text3);font-style:italic}
+
+/* SUMMARY */
+.summary{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  padding:2rem;text-align:center;display:none;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.summary.visible{display:block}
+.sum-icon{width:68px;height:68px;border-radius:50%;display:inline-flex;
+  align-items:center;justify-content:center;margin-bottom:16px}
+.sum-icon i{font-size:32px}
+.sum-score{font-size:38px;font-weight:600;letter-spacing:-.03em;color:var(--text)}
+.sum-score span{font-size:22px;font-weight:400;color:var(--text2)}
+.sum-msg{font-size:15px;color:var(--text2);margin:6px 0 1.75rem;line-height:1.5}
+.sum-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.s-btn{padding:10px 22px;border-radius:var(--r);border:1px solid var(--border2);
+  background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;
+  font-family:var(--sans);color:var(--text);transition:background .12s;
+  display:inline-flex;align-items:center;gap:8px}
+.s-btn:hover{background:var(--surface2)}
+.s-btn.primary{background:var(--navy);color:#FFF;border-color:var(--navy)}
+.s-btn.primary:hover{background:var(--navy2)}
+
+/* ACTION BAR */
+.action-bar{margin-top:1.5rem;display:flex;justify-content:flex-end}
+.check-all-btn{padding:10px 24px;border-radius:var(--r);border:none;cursor:pointer;
+  font-size:14px;font-weight:600;font-family:var(--sans);
+  background:var(--accent);color:#FFF;display:inline-flex;align-items:center;gap:8px;
+  transition:background .12s;box-shadow:0 2px 6px rgba(59,130,246,.25)}
+.check-all-btn:hover{background:var(--accent2)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <p class="hdr-label">🐍 Python · Kurs Data Science</p>
+  <h1 class="hdr-title">Lekcja 07 — Uzupełnij kod</h1>
+  <div class="hdr-sub">
+    <span class="hdr-pill"><i class="ti ti-pencil"></i> Wpisz brakujące wyrażenia</span>
+    <span class="hdr-pill"><i class="ti ti-list-numbers"></i> 12 zadań</span>
+    <span class="hdr-pill"><i class="ti ti-bulb"></i> Logika i pętle</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="prog-wrap">
+    <span class="prog-label">Postęp</span>
+    <div class="prog-bar-outer"><div class="prog-bar-inner" id="prog-bar" style="width:0%"></div></div>
+    <span class="prog-count" id="prog-count">0 / 12</span>
+  </div>
+
+  <div id="exercises"></div>
+
+  <div class="action-bar">
+    <button class="check-all-btn" onclick="checkAll()">
+      <i class="ti ti-check"></i> Sprawdź wszystkie
+    </button>
+  </div>
+
+  <div class="summary" id="summary">
+    <div class="sum-icon" id="sum-icon"><i class="ti" id="sum-ic-i"></i></div>
+    <div class="sum-score" id="sum-score"></div>
+    <p class="sum-msg" id="sum-msg"></p>
+    <div class="sum-btns">
+      <button onclick="resetAll()" class="s-btn primary"><i class="ti ti-refresh"></i> Spróbuj ponownie</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── EXERCISE DATA ──────────────────────────────────────────────────────────
+// Each exercise:
+//   topic, q, blanks, lines[]
+//   line: string OR {pre, blank_id, post} for inline blanks
+//   blanks: {id, answer, width (chars), hint?}
+
+const EXERCISES = [
+  // ── 1 ── if/else – parzyste
+  {
+    topic:"if / else",
+    q:"Uzupełnij warunek, który sprawdza czy liczba jest parzysta (reszta z dzielenia przez 2 równa 0).",
+    badges:1,
+    lines:[
+      "liczba = 14",
+      {pre:"if liczba ", blank:"b1", post:" 0:"},
+      '    print("parzysta")',
+      "else:",
+      '    print("nieparzysta")',
+    ],
+    blanks:{b1:{answer:"% 2 ==", width:90, hint:"operator modulo i porównanie"}},
+    explain:"% to operator modulo (reszta z dzielenia). Liczba parzysta gdy liczba % 2 == 0."
+  },
+
+  // ── 2 ── if/elif/else – kategoria temperatury (2 luki)
+  {
+    topic:"if / elif / else",
+    q:"Wpisz progi prognozy pogody: poniżej 0 → 'mróz', poniżej 15 → 'chłodno', inaczej → 'ciepło'.",
+    badges:2,
+    lines:[
+      "t = -3",
+      {pre:"if t < ", blank:"b1", post:":"},
+      '    print("mróz")',
+      {pre:"elif t < ", blank:"b2", post:":"},
+      '    print("chłodno")',
+      "else:",
+      '    print("ciepło")',
+    ],
+    blanks:{
+      b1:{answer:"0",  width:50, hint:"poniżej zera"},
+      b2:{answer:"15", width:50, hint:"poniżej piętnastu"},
+    },
+    explain:"if/elif sprawdza warunki od góry. Dla t=-3: t<0 jest prawdziwe → drukuje 'mróz'. Bloki elif i else są pomijane."
+  },
+
+  // ── 3 ── while – suma 1..n
+  {
+    topic:"while",
+    q:"Uzupełnij pętlę while sumującą liczby od 1 do 10. Wpisz brakujący warunek i aktualizację zmiennej.",
+    badges:2,
+    lines:[
+      "suma = 0",
+      "i = 1",
+      {pre:"while i ", blank:"b1", post:":"},
+      "    suma += i",
+      {pre:"    i ", blank:"b2", post:""},
+    ],
+    blanks:{
+      b1:{answer:"<= 10", width:80, hint:"kiedy pętla ma się wykonywać?"},
+      b2:{answer:"+= 1",  width:70, hint:"zwiększ licznik o 1"},
+    },
+    explain:"Warunek i <= 10 powoduje wykonanie ciała pętli dla i = 1,2,...,10. i += 1 zapobiega nieskończonej pętli — bez tego i zawsze byłoby 1!"
+  },
+
+  // ── 4 ── while + break – szukanie wartości
+  {
+    topic:"while + break",
+    q:"Pętla szuka pierwszej wartości większej niż 100 na liście. Uzupełnij warunek i instrukcję wyjścia.",
+    badges:2,
+    lines:[
+      "dane = [45, 78, 112, 33, 200]",
+      "wynik = None",
+      "i = 0",
+      "while i < len(dane):",
+      {pre:"    if dane[i] ", blank:"b1", post:":"},
+      "        wynik = dane[i]",
+      {pre:"        ", blank:"b2", post:""},
+      "    i += 1",
+      "print(wynik)  # 112",
+    ],
+    blanks:{
+      b1:{answer:"> 100", width:80, hint:"warunek znalezienia"},
+      b2:{answer:"break",  width:70, hint:"zatrzymaj pętlę"},
+    },
+    explain:"break natychmiast kończy pętlę po znalezieniu pierwszej pasującej wartości (112). Bez break pętla przeszłaby całą listę i wynik byłby 200."
+  },
+
+  // ── 5 ── for + range – odliczanie
+  {
+    topic:"for + range()",
+    q:"Wydrukuj odliczanie: 10, 8, 6, 4, 2. Uzupełnij argumenty range().",
+    badges:1,
+    lines:[
+      {pre:"for i in range(", blank:"b1", post:"):"},
+      "    print(i)",
+    ],
+    blanks:{
+      b1:{answer:"10, 0, -2", width:120, hint:"start, stop, step"},
+    },
+    explain:"range(10, 0, -2): start=10, stop=0 (wyłączny), step=-2. Generuje: 10, 8, 6, 4, 2. Stop=0 jest wyłączny, więc 0 się nie pojawia."
+  },
+
+  // ── 6 ── for + enumerate
+  {
+    topic:"for + enumerate()",
+    q:"Wydrukuj wyniki z numerem studenta (1-based). Uzupełnij wywołanie enumerate z odpowiednim startem.",
+    badges:1,
+    lines:[
+      "wyniki = [85, 92, 78]",
+      {pre:"for nr, wynik in enumerate(wyniki, ", blank:"b1", post:"):"},
+      "    print(f'Student #{nr}: {wynik} pkt')",
+    ],
+    blanks:{
+      b1:{answer:"1", width:50, hint:"numerowanie od..."},
+    },
+    explain:"enumerate(seq, start=1) numeruje od 1. Domyślnie enumerate numeruje od 0 — parametr start=1 przesuwa licznik. Wynik: Student #1: 85 pkt, Student #2: 92 pkt..."
+  },
+
+  // ── 7 ── for + continue – filtr anomalii
+  {
+    topic:"for + continue",
+    q:"Pomijaj pomiary poza zakresem [35, 42] używając continue. Uzupełnij warunek i instrukcję.",
+    badges:2,
+    lines:[
+      "pomiary = [36.6, 42.5, 37.2, 34.9, 38.1]",
+      "poprawne = []",
+      "for t in pomiary:",
+      {pre:"    if not (35 ", blank:"b1", post:" 42):"},
+      {pre:"        ", blank:"b2", post:""},
+      "    poprawne.append(t)",
+      "print(poprawne)  # [36.6, 37.2, 38.1]",
+    ],
+    blanks:{
+      b1:{answer:"<= t <=", width:110, hint:"porównanie łańcuchowe: sprawdź obie granice"},
+      b2:{answer:"continue",  width:90, hint:"pomiń resztę iteracji"},
+    },
+    explain:"not (35 <= t <= 42) to negacja warunku poprawności. continue przeskakuje do następnej iteracji — pomiar nie trafia do listy. Wartości 42.5 i 34.9 są odfiltrowane."
+  },
+
+  // ── 8 ── list comprehension – transformacja
+  {
+    topic:"list comprehension",
+    q:"Przekonwertuj wzrosty z centymetrów na metry używając list comprehension.",
+    badges:1,
+    lines:[
+      "wzrosty_cm = [165, 178, 182, 160]",
+      {pre:"wzrosty_m = [", blank:"b1", post:" for w in wzrosty_cm]"},
+      "print(wzrosty_m)  # [1.65, 1.78, 1.82, 1.60]",
+    ],
+    blanks:{
+      b1:{answer:"w / 100", width:90, hint:"przelicz centymetry na metry"},
+    },
+    explain:"List comprehension: [wyrażenie for elem in sekwencja]. Tutaj wyrażenie to w/100 — dzielimy każdy wzrost przez 100."
+  },
+
+  // ── 9 ── list comprehension – filtr
+  {
+    topic:"list comprehension + filtr",
+    q:"Wyciągnij tylko temperatury wskazujące gorączkę (>= 38.0°C).",
+    badges:1,
+    lines:[
+      "temps = [36.5, 37.8, 38.5, 36.9, 39.2]",
+      {pre:"goraczka = [t for t in temps ", blank:"b1", post:"]"},
+      "print(goraczka)  # [38.5, 39.2]",
+    ],
+    blanks:{
+      b1:{answer:"if t >= 38.0", width:130, hint:"warunek filtrujący po if"},
+    },
+    explain:"Filtr w list comprehension: [wyrażenie for elem in seq if warunek]. Warunek if t >= 38.0 przepuszcza tylko wartości spełniające kryterium gorączki."
+  },
+
+  // ── 10 ── list comprehension – transformacja z if/else
+  {
+    topic:"list comprehension — if/else",
+    q:"Sklasyfikuj wartości glukozy: < 100 → 'norma', >= 100 → 'wysoka'. Uzupełnij wyrażenie warunkowe.",
+    badges:1,
+    lines:[
+      "glukozy = [95, 110, 88, 130]",
+      {pre:"kat = ['norma' ", blank:"b1", post:" 'wysoka' for g in glukozy]"},
+      "print(kat)  # ['norma', 'wysoka', 'norma', 'wysoka']",
+    ],
+    blanks:{
+      b1:{answer:"if g < 100 else", width:170, hint:"ternary w list comprehension: wartość_A if warunek else wartość_B"},
+    },
+    explain:"W list comprehension if/else musi być PRZED for (transformacja): ['norma' if g<100 else 'wysoka' for g in glukozy]. Filtr (if na końcu) nie ma else — tu chcemy wartość dla każdego elementu."
+  },
+
+  // ── 11 ── zagnieżdżone pętle – macierz (2 luki)
+  {
+    topic:"pętle zagnieżdżone",
+    q:"Policz sumę elementów macierzy (lista list). Uzupełnij iterację po wierszach i kolumnach.",
+    badges:2,
+    lines:[
+      "macierz = [[1,2,3],[4,5,6],[7,8,9]]",
+      "suma = 0",
+      {pre:"for wiersz in ", blank:"b1", post:":"},
+      {pre:"    for el in ", blank:"b2", post:":"},
+      "        suma += el",
+      "print(suma)  # 45",
+    ],
+    blanks:{
+      b1:{answer:"macierz",  width:100, hint:"zewnętrzna pętla po liście list"},
+      b2:{answer:"wiersz",   width:90,  hint:"wewnętrzna pętla po elementach wiersza"},
+    },
+    explain:"Zewnętrzna pętla iteruje po wierszach (każdy wiersz to lista). Wewnętrzna iteruje po elementach wiersza. Suma 1+2+...+9 = 45."
+  },
+
+  // ── 12 ── range() vs list() – pamięć (1 luka)
+  {
+    topic:"range() — efektywność",
+    q:"Oblicz sumę liczb od 0 do 999 999 efektywnie, bez tworzenia listy w pamięci. Użyj range() bezpośrednio.",
+    badges:1,
+    lines:[
+      {pre:"wynik = sum(", blank:"b1", post:")"},
+      "print(wynik)  # 499999500000",
+    ],
+    blanks:{
+      b1:{answer:"range(1_000_000)", width:180, hint:"przekaż range() bezpośrednio do sum() — bez list()"},
+    },
+    explain:"sum(range(n)) przekazuje leniwy obiekt range bezpośrednio do sum() — żadna lista nie jest tworzona w pamięci. sum(list(range(n))) stworzyłoby listę ~8 MB. Dla n=1M range zajmuje stałe ~48 bajtów."
+  },
+];
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+let checked = 0;
+
+function renderAll(){
+  const container = document.getElementById('exercises');
+  container.innerHTML = '';
+  EXERCISES.forEach((ex, idx) => {
+    const card = document.createElement('div');
+    card.className = 'ex-card';
+    card.id = `ex-${idx}`;
+
+    // HEAD
+    const badgeClass = ex.badges === 2 ? 'b2' : ex.badges >= 3 ? 'b3' : '';
+    const badgeLabel = ex.badges === 1 ? '1 luka' : ex.badges === 2 ? '2 luki' : '3 luki';
+    card.innerHTML = `
+      <div class="ex-head">
+        <div class="ex-num">${idx+1}</div>
+        <div class="ex-meta">
+          <div class="ex-topic">${ex.topic}</div>
+          <div class="ex-q">${ex.q}</div>
+        </div>
+        <span class="ex-badge ${badgeClass}">${badgeLabel}</span>
+      </div>`;
+
+    // CODE BLOCK
+    const codeWrap = document.createElement('div');
+    codeWrap.className = 'code-wrap';
+
+    ex.lines.forEach(line => {
+      const span = document.createElement('span');
+      span.className = 'code-line';
+
+      if (typeof line === 'string') {
+        span.textContent = line;
+      } else {
+        // inline blank
+        const pre = document.createTextNode(line.pre);
+        const blankDef = ex.blanks[line.blank];
+        const wrap = document.createElement('span');
+        wrap.className = 'blank';
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.id = `inp-${idx}-${line.blank}`;
+        inp.autocomplete = 'off';
+        inp.autocorrect = 'off';
+        inp.autocapitalize = 'off';
+        inp.spellcheck = false;
+        inp.style.setProperty('--w', blankDef.width + 'px');
+        inp.setAttribute('data-answer', blankDef.answer);
+        inp.setAttribute('data-ex', idx);
+        inp.placeholder = '?';
+        inp.addEventListener('keydown', e => {
+          if (e.key === 'Enter') checkOne(idx);
+        });
+        wrap.appendChild(inp);
+        const post = document.createTextNode(line.post);
+        span.appendChild(pre);
+        span.appendChild(wrap);
+        span.appendChild(post);
+      }
+      codeWrap.appendChild(span);
+    });
+    card.appendChild(codeWrap);
+
+    // FEEDBACK ROW (hidden initially)
+    const fbRow = document.createElement('div');
+    fbRow.className = 'fb-row';
+    fbRow.id = `fb-${idx}`;
+    card.appendChild(fbRow);
+
+    // FOOTER
+    const foot = document.createElement('div');
+    foot.className = 'ex-foot';
+    foot.innerHTML = `
+      <span class="hint-txt" id="hint-${idx}"></span>
+      <button class="check-btn" id="chk-${idx}" onclick="checkOne(${idx})">
+        <i class="ti ti-check"></i> Sprawdź
+      </button>`;
+    card.appendChild(foot);
+
+    container.appendChild(card);
+  });
+}
+
+// ─── CHECK ONE ───────────────────────────────────────────────────────────────
+function normalize(s){ return s.trim().replace(/\s+/g,' '); }
+
+function checkOne(idx){
+  const ex = EXERCISES[idx];
+  const blankIds = Object.keys(ex.blanks);
+  let allCorrect = true;
+  let anyWrong = false;
+
+  blankIds.forEach(bid => {
+    const inp = document.getElementById(`inp-${idx}-${bid}`);
+    if(!inp) return;
+    const answer = normalize(ex.blanks[bid].answer);
+    const given  = normalize(inp.value);
+    const ok = given.toLowerCase() === answer.toLowerCase();
+    inp.classList.remove('inp-ok','inp-err');
+    inp.classList.add(ok ? 'inp-ok' : 'inp-err');
+    inp.disabled = true;
+    if(!ok){ allCorrect = false; anyWrong = true; }
+  });
+
+  // feedback
+  const fbRow = document.getElementById(`fb-${idx}`);
+  fbRow.className = 'fb-row visible ' + (allCorrect ? 'fb-ok' : 'fb-err');
+  const card = document.getElementById(`ex-${idx}`);
+  card.classList.remove('done-ok','done-err');
+  card.classList.add(allCorrect ? 'done-ok' : 'done-err');
+
+  if(allCorrect){
+    fbRow.innerHTML = `<i class="ti ti-circle-check"></i>
+      <div><p class="fb-title">Dobrze!</p>
+      <p class="fb-text">${ex.explain}</p></div>`;
+  } else {
+    const hints = blankIds.map(bid => {
+      const inp = document.getElementById(`inp-${idx}-${bid}`);
+      if(inp && inp.classList.contains('inp-err'))
+        return `<code style="font-family:var(--mono);font-size:12px;background:rgba(0,0,0,.15);padding:1px 5px;border-radius:3px">${ex.blanks[bid].hint}</code>`;
+      return null;
+    }).filter(Boolean).join(' · ');
+
+    fbRow.innerHTML = `<i class="ti ti-circle-x"></i>
+      <div>
+        <p class="fb-title">Nie tym razem.</p>
+        <p class="fb-text">${hints ? 'Wskazówka: ' + hints : ''}</p>
+        <button class="show-ans" onclick="showAnswer(${idx})">Pokaż odpowiedź</button>
+      </div>`;
+  }
+
+  document.getElementById(`chk-${idx}`).disabled = true;
+
+  // update progress
+  checked = document.querySelectorAll('.ex-card.done-ok, .ex-card.done-err').length;
+  updateProgress();
+}
+
+function showAnswer(idx){
+  const ex = EXERCISES[idx];
+  Object.keys(ex.blanks).forEach(bid => {
+    const inp = document.getElementById(`inp-${idx}-${bid}`);
+    if(inp && inp.classList.contains('inp-err')){
+      inp.value = ex.blanks[bid].answer;
+      inp.classList.remove('inp-err');
+      inp.classList.add('inp-ok');
+    }
+  });
+  const fbRow = document.getElementById(`fb-${idx}`);
+  fbRow.className = 'fb-row visible fb-err';
+  fbRow.innerHTML = `<i class="ti ti-circle-x"></i>
+    <div><p class="fb-title">Odpowiedź pokazana.</p>
+    <p class="fb-text">${ex.explain}</p></div>`;
+}
+
+// ─── CHECK ALL ───────────────────────────────────────────────────────────────
+function checkAll(){
+  EXERCISES.forEach((_, idx) => {
+    const btn = document.getElementById(`chk-${idx}`);
+    if(btn && !btn.disabled) checkOne(idx);
+  });
+
+  // score
+  const ok = document.querySelectorAll('.ex-card.done-ok').length;
+  const total = EXERCISES.length;
+  const p = ok / total;
+
+  const summary = document.getElementById('summary');
+  summary.className = 'summary visible';
+  summary.scrollIntoView({behavior:'smooth', block:'start'});
+
+  const [ic, bg, tc] =
+    p >= .85 ? ['ti-trophy','#FEF9C3','#854D0E'] :
+    p >= .6  ? ['ti-thumb-up','#DBEAFE','#1E3A8A'] :
+               ['ti-refresh','#EDE9FE','#4C1D95'];
+  const msg =
+    p >= .85 ? 'Logika i pętle opanowane! Gotowy na funkcje.' :
+    p >= .6  ? 'Nieźle! Przejrzyj błędne zadania i spróbuj ponownie.' :
+               'Wróć do ściągawki — zwróć uwagę na break, continue i list comprehension.';
+
+  document.getElementById('sum-ic-i').className = `ti ${ic}`;
+  document.getElementById('sum-icon').style.cssText = `background:${bg}`;
+  document.getElementById('sum-ic-i').style.color = tc;
+  document.getElementById('sum-score').innerHTML = `${ok}<span> / ${total}</span>`;
+  document.getElementById('sum-msg').textContent = msg;
+}
+
+// ─── RESET ───────────────────────────────────────────────────────────────────
+function resetAll(){
+  checked = 0;
+  renderAll();
+  updateProgress();
+  document.getElementById('summary').className = 'summary';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ─── PROGRESS ────────────────────────────────────────────────────────────────
+function updateProgress(){
+  const total = EXERCISES.length;
+  const pct = Math.round(checked / total * 100);
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-count').textContent = `${checked} / ${total}`;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderAll();
+updateProgress();
+</script>
+</body>
+</html>

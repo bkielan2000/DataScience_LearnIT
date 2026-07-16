@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz powtórkowy — Python dla Data Science (Lekcje 04–08)</title>
+<style>
+  :root {
+    --bg: #F6F5F1;
+    --surface: #FFFFFF;
+    --ink: #20242C;
+    --ink-soft: #6B7280;
+    --line: #E3E1DA;
+    --accent: #2D5F8B;
+    --accent-soft: #EAF1F7;
+    --diff1: #2E8B57; --diff1-bg: #E8F5EC;
+    --diff2: #2D6CA8; --diff2-bg: #E8F0F8;
+    --diff3: #C6741B; --diff3-bg: #FCEFE2;
+    --diff4: #B0413E; --diff4-bg: #FBEAEA;
+    --ok: #1E7B34; --ok-bg: #E6F4EA;
+    --bad: #B0413E; --bad-bg: #FBEAEA;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button { font: inherit; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(246,245,241,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .kernel-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--diff1);
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(46,139,87,0.45); }
+    70%  { box-shadow: 0 0 0 6px rgba(46,139,87,0); }
+    100% { box-shadow: 0 0 0 0 rgba(46,139,87,0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kernel-dot { animation: none; }
+  }
+  .brand h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.01em; }
+  .subtitle { margin: 2px 0 0; font-size: 0.8rem; color: var(--ink-soft); font-family: var(--mono); }
+
+  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .progress { font-family: var(--mono); font-size: 0.85rem; color: var(--ink-soft); white-space: nowrap; }
+  .btn {
+    font-family: var(--sans); font-size: 0.85rem; font-weight: 600;
+    border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid transparent;
+    transition: transform 0.05s ease, opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink-soft); }
+  .btn-ghost:hover { background: var(--accent-soft); color: var(--ink); }
+
+  /* ---------- Filters ---------- */
+  .filters { max-width: 880px; margin: 18px auto 0; padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+  .filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .filter-label {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--ink-soft);
+    text-transform: uppercase; letter-spacing: 0.08em; min-width: 56px;
+  }
+  .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-btn {
+    font-family: var(--mono); font-size: 0.78rem; padding: 5px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-btn.diff1.active { background: var(--diff1); border-color: var(--diff1); }
+  .filter-btn.diff2.active { background: var(--diff2); border-color: var(--diff2); }
+  .filter-btn.diff3.active { background: var(--diff3); border-color: var(--diff3); }
+  .filter-btn.diff4.active { background: var(--diff4); border-color: var(--diff4); }
+
+  .intro {
+    max-width: 880px; margin: 14px auto 0; padding: 0 20px;
+    font-size: 0.88rem; color: var(--ink-soft);
+  }
+
+  /* ---------- Summary ---------- */
+  .summary {
+    max-width: 880px; margin: 22px auto 0; padding: 18px 20px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  }
+  .summary.hidden { display: none; }
+  .summary-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .summary-head h2 { margin: 0; font-size: 1.4rem; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr; } }
+  .summary h3 {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-soft); margin: 0 0 8px; font-family: var(--mono);
+  }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .stat-label { flex: 0 0 auto; white-space: nowrap; }
+  .stat-bar { flex: 1; height: 6px; background: #F0EEE8; border-radius: 3px; overflow: hidden; }
+  .stat-bar-fill { height: 100%; border-radius: 3px; }
+  .stat-row .stat-val { font-family: var(--mono); flex: 0 0 auto; color: var(--ink-soft); }
+
+  /* ---------- Quiz cells ---------- */
+  main#quiz { max-width: 880px; margin: 22px auto 0; padding: 0 20px; }
+
+  .cell {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--ink-soft);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .cell.cell-diff1 { border-left-color: var(--diff1); }
+  .cell.cell-diff2 { border-left-color: var(--diff2); }
+  .cell.cell-diff3 { border-left-color: var(--diff3); }
+  .cell.cell-diff4 { border-left-color: var(--diff4); }
+  .cell.correct   { border-left-color: var(--ok);  background: var(--ok-bg); }
+  .cell.incorrect { border-left-color: var(--bad); background: var(--bad-bg); }
+
+  .cell-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 12px 16px 0; }
+  .in-label { font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 0.85rem; }
+  .badge {
+    font-family: var(--mono); font-size: 0.68rem; padding: 2px 9px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+  }
+  .badge.lesson-badge { background: var(--accent-soft); color: var(--accent); }
+  .badge.diff1 { background: var(--diff1-bg); color: var(--diff1); }
+  .badge.diff2 { background: var(--diff2-bg); color: var(--diff2); }
+  .badge.diff3 { background: var(--diff3-bg); color: var(--diff3); }
+  .badge.diff4 { background: var(--diff4-bg); color: var(--diff4); }
+  .badge.type-badge { background: #F0EEE8; color: var(--ink-soft); }
+
+  .cell-body { padding: 10px 16px 16px; }
+  .question { font-size: 0.98rem; margin-bottom: 12px; }
+  .question code {
+    font-family: var(--mono); background: #F0EEE8; padding: 1px 5px; border-radius: 4px; font-size: 0.88em;
+  }
+  .question pre {
+    background: #20242C; color: #E8E6DF; padding: 12px 14px; border-radius: 8px;
+    overflow-x: auto; font-family: var(--mono); font-size: 0.85rem; line-height: 1.55; margin: 10px 0 0;
+  }
+  .question pre code { background: transparent; padding: 0; color: inherit; }
+
+  .options { display: flex; flex-direction: column; gap: 6px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 8px;
+    cursor: pointer; font-size: 0.92rem; transition: background 0.15s ease; border: 1px solid transparent;
+  }
+  .opt:hover { background: var(--accent-soft); }
+  .opt input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
+  .opt input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .cell.correct .opt, .cell.incorrect .opt { pointer-events: none; }
+  .opt.opt-correct { background: var(--ok-bg); border-color: var(--ok); }
+  .opt.opt-wrong   { background: var(--bad-bg); border-color: var(--bad); }
+
+  .fill { display: flex; align-items: center; gap: 8px; }
+  .fill .prompt { font-family: var(--mono); color: var(--accent); font-weight: 700; }
+  .fill input {
+    flex: 1; font-family: var(--mono); font-size: 0.92rem; padding: 9px 12px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink);
+    min-width: 0;
+  }
+  .fill input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .cell.correct .fill input, .cell.incorrect .fill input { pointer-events: none; }
+
+  .out-cell { border-top: 1px solid var(--line); padding: 12px 16px; display: flex; gap: 10px; align-items: flex-start; }
+  .out-cell.hidden { display: none; }
+  .out-label { font-family: var(--mono); font-weight: 700; font-size: 0.85rem; flex-shrink: 0; padding-top: 1px; }
+  .out-label.ok { color: var(--ok); }
+  .out-label.bad { color: var(--bad); }
+  .out-body p { margin: 0 0 6px; font-size: 0.9rem; }
+  .out-body p:last-child { margin-bottom: 0; }
+  .verdict { font-weight: 700; }
+  .verdict.ok { color: var(--ok); }
+  .verdict.bad { color: var(--bad); }
+  .correct-answer strong, .user-answer em { color: var(--ink); font-style: normal; }
+  .explanation, .user-answer { color: var(--ink-soft); }
+  .explanation code { font-family: var(--mono); background: #F0EEE8; padding: 1px 4px; border-radius: 4px; font-size: 0.88em; }
+
+  .footer { text-align: center; color: var(--ink-soft); font-family: var(--mono); font-size: 0.78rem; padding: 24px 20px 40px; }
+
+  @media (max-width: 640px) {
+    .topbar { padding: 12px 16px; }
+    .brand h1 { font-size: 1rem; }
+    .controls { width: 100%; justify-content: space-between; }
+    .filter-label { min-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="kernel-dot" aria-hidden="true"></span>
+      <div>
+        <h1>Quiz powtórkowy</h1>
+        <p class="subtitle">Python dla Data Science · Lekcje 04–08</p>
+      </div>
+    </div>
+    <div class="controls">
+      <span id="progress" class="progress">0 / 40 odpowiedzi</span>
+      <button id="resetBtn" class="btn btn-ghost" type="button">↺ Resetuj</button>
+      <button id="checkBtn" class="btn btn-primary" type="button">▶ Sprawdź odpowiedzi</button>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="filter-row">
+      <span class="filter-label">Lekcja</span>
+      <div class="filter-pills" data-filter-group="lesson">
+        <button class="filter-btn active" data-value="all" type="button">Wszystkie</button>
+        <button class="filter-btn" data-value="4" type="button">04</button>
+        <button class="filter-btn" data-value="5" type="button">05</button>
+        <button class="filter-btn" data-value="6" type="button">06</button>
+        <button class="filter-btn" data-value="7" type="button">07</button>
+        <button class="filter-btn" data-value="8" type="button">08</button>
+      </div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Poziom</span>
+      <div class="filter-pills" data-filter-group="diff">
+        <button class="filter-btn active" data-value="all" type="button">Wszystkie</button>
+        <button class="filter-btn diff1" data-value="1" type="button">Podstawowy</button>
+        <button class="filter-btn diff2" data-value="2" type="button">Średni</button>
+        <button class="filter-btn diff3" data-value="3" type="button">Trudny</button>
+        <button class="filter-btn diff4" data-value="4" type="button">Bardzo trudny</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="intro">
+    40 pytań z Lekcji 04–08 (podstawy Pythona, listy i stringi, słowniki/zbiory/krotki, logika i pętle, funkcje i idiomy).
+    Pytania jednokrotnego wyboru, wielokrotnego wyboru oraz uzupełnianie luk. Odpowiedz na wszystkie lub przefiltruj wg lekcji/poziomu,
+    a na końcu kliknij <strong>„Sprawdź odpowiedzi”</strong>, aby zobaczyć wynik i wyjaśnienia.
+  </p>
+
+  <section id="summary" class="summary hidden">
+    <div class="summary-head">
+      <span class="out-label ok">Out[wynik]:</span>
+      <h2 id="summaryScore">—</h2>
+    </div>
+    <div class="summary-grid">
+      <div>
+        <h3>Wynik według lekcji</h3>
+        <div id="lessonStats"></div>
+      </div>
+      <div>
+        <h3>Wynik według poziomu trudności</h3>
+        <div id="diffStats"></div>
+      </div>
+    </div>
+  </section>
+
+  <main id="quiz"></main>
+
+  <footer class="footer">
+    <p>Quiz powtórkowy · Python dla Data Science · Lekcje 04–08 · 40 pytań</p>
+  </footer>
+
+<script>
+  const LESSON_NAMES = {
+    4: 'Lekcja 04',
+    5: 'Lekcja 05',
+    6: 'Lekcja 06',
+    7: 'Lekcja 07',
+    8: 'Lekcja 08'
+  };
+  const DIFF_NAMES = {
+    1: 'Podstawowy',
+    2: 'Średni',
+    3: 'Trudny',
+    4: 'Bardzo trudny'
+  };
+  const DIFF_VARS = {
+    1: 'var(--diff1)',
+    2: 'var(--diff2)',
+    3: 'var(--diff3)',
+    4: 'var(--diff4)'
+  };
+
+  const questions = [
+
+    /* ===================== LEKCJA 04 — Podstawy Pythona ===================== */
+    {
+      id: 1, lesson: 4, difficulty: 1, type: 'single',
+      q: 'Jaki typ danych zwróci wyrażenie <code>type(3.14)</code>?',
+      options: ['int', 'float', 'str', 'bool'],
+      correct: [1],
+      explanation: 'Liczby zawierające część dziesiętną (po przecinku) mają w Pythonie typ <code>float</code>.'
+    },
+    {
+      id: 2, lesson: 4, difficulty: 1, type: 'single',
+      q: 'Który operator w Pythonie służy do dzielenia całkowitego (bez części dziesiętnej)?',
+      options: ['/', '//', '%', '**'],
+      correct: [1],
+      explanation: 'Operator <code>//</code> wykonuje dzielenie całkowite, odrzucając resztę — np. <code>7 // 2</code> daje <code>3</code>.'
+    },
+    {
+      id: 3, lesson: 4, difficulty: 2, type: 'single',
+      q: 'Jaki będzie wynik wyrażenia <code>10 % 3</code>?',
+      options: ['3', '1', '3.33', '0'],
+      correct: [1],
+      explanation: 'Operator <code>%</code> (modulo) zwraca resztę z dzielenia. <code>10 / 3 = 3</code> reszty <code>1</code>, więc <code>10 % 3 = 1</code>.'
+    },
+    {
+      id: 4, lesson: 4, difficulty: 2, type: 'fill',
+      q: 'Uzupełnij: aby zamienić wartość tekstową <code>"5"</code> na liczbę całkowitą, używamy funkcji <code>___()</code>.',
+      correct: ['int'],
+      explanation: 'Funkcja <code>int()</code> konwertuje tekst (lub liczbę zmiennoprzecinkową) na liczbę całkowitą, np. <code>int("5")</code> da <code>5</code>.'
+    },
+    {
+      id: 5, lesson: 4, difficulty: 3, type: 'multi',
+      q: 'Które z poniższych są poprawnymi (zgodnymi ze składnią Pythona) nazwami zmiennych?',
+      options: ['my_var', '2nd_value', '_temp', 'class'],
+      correct: [0, 2],
+      explanation: 'Nazwa zmiennej nie może zaczynać się od cyfry (<code>2nd_value</code> jest błędne) i nie może być słowem zarezerwowanym (<code>class</code> jest słowem kluczowym Pythona). <code>my_var</code> i <code>_temp</code> są poprawne.'
+    },
+    {
+      id: 6, lesson: 4, difficulty: 3, type: 'single',
+      q: 'Jaki będzie wynik wyrażenia <code>2 ** 3 ** 2</code>?',
+      options: ['64', '512', '18', '729'],
+      correct: [1],
+      explanation: 'Operator potęgowania <code>**</code> jest prawostronnie łączny, więc wyrażenie liczone jest jako <code>2 ** (3 ** 2) = 2 ** 9 = 512</code>.'
+    },
+    {
+      id: 7, lesson: 4, difficulty: 4, type: 'single',
+      q: 'Jaki będzie wynik wyrażenia <code>bool("False")</code>?',
+      options: ['False', 'True', 'Błąd (Error)', 'None'],
+      correct: [1],
+      explanation: 'Każdy niepusty ciąg znaków jest w Pythonie traktowany jako prawda (<code>True</code>) — nawet jeśli jego treścią jest słowo <code>"False"</code>. Tylko pusty string <code>""</code> da <code>False</code>.'
+    },
+    {
+      id: 8, lesson: 4, difficulty: 4, type: 'fill',
+      q: 'Jaki będzie wynik porównania <code>5 == 5.0</code>? (wpisz <code>True</code> lub <code>False</code>)',
+      correct: ['true'],
+      explanation: 'Python porównuje wartości liczbowe niezależnie od ich typu — <code>int</code> i <code>float</code> o tej samej wartości są sobie równe, więc wynik to <code>True</code>.'
+    },
+
+    /* ===================== LEKCJA 05 — Listy i łańcuchy znaków ===================== */
+    {
+      id: 9, lesson: 5, difficulty: 1, type: 'single',
+      q: 'Mając listę <code>lista = [10, 20, 30]</code>, jak odwołać się do jej pierwszego elementu?',
+      options: ['lista[1]', 'lista[0]', 'lista(0)', 'lista.first()'],
+      correct: [1],
+      explanation: 'Indeksowanie w Pythonie zaczyna się od <code>0</code>, więc pierwszy element to <code>lista[0]</code>.'
+    },
+    {
+      id: 10, lesson: 5, difficulty: 1, type: 'single',
+      q: 'Która metoda dodaje nowy element na koniec listy?',
+      options: ['insert()', 'append()', 'add()', 'extend()'],
+      correct: [1],
+      explanation: '<code>append()</code> dodaje pojedynczy element na koniec listy. <code>insert()</code> wymaga podania indeksu, a listy nie mają metody <code>add()</code>.'
+    },
+    {
+      id: 11, lesson: 5, difficulty: 2, type: 'single',
+      q: 'Co zwróci wycinek <code>"Data Science"[5:7]</code>?',
+      options: ['"Sc"', '"Sci"', '" S"', '"ce"'],
+      correct: [0],
+      explanation: 'Indeksy w napisie <code>"Data Science"</code> to: D(0) a(1) t(2) a(3) (4-spacja) S(5) c(6) i(7)... Wycinek <code>[5:7]</code> obejmuje indeksy 5 i 6, czyli <code>"Sc"</code>.'
+    },
+    {
+      id: 12, lesson: 5, difficulty: 2, type: 'fill',
+      q: 'Aby podzielić tekst na listę słów według spacji, używamy metody <code>str.___()</code>.',
+      correct: ['split'],
+      explanation: 'Metoda <code>split()</code> dzieli ciąg znaków na listę podciągów na podstawie podanego separatora (domyślnie spacji), np. <code>"a b c".split()</code> da <code>[\'a\',\'b\',\'c\']</code>.'
+    },
+    {
+      id: 13, lesson: 5, difficulty: 3, type: 'multi',
+      q: 'Dla listy <code>lista = [3, 2, 1]</code>, które z poniższych wyrażeń zwrócą (jako wynik) listę <code>[1, 2, 3]</code>?',
+      options: ['sorted(lista)', 'lista.sort()', 'list(reversed(lista))', 'lista.reverse()'],
+      correct: [0, 2],
+      explanation: '<code>sorted(lista)</code> zwraca nową, sortowaną listę <code>[1, 2, 3]</code>. <code>list(reversed(lista))</code> odwraca <code>[3, 2, 1]</code> do <code>[1, 2, 3]</code>. Natomiast <code>sort()</code> i <code>reverse()</code> działają „w miejscu” i zwracają <code>None</code> — nie zwracają listy jako wynik.'
+    },
+    {
+      id: 14, lesson: 5, difficulty: 3, type: 'single',
+      q: 'Co zwróci wyrażenie <code>[1, 2, 3] + [4, 5]</code>?',
+      options: ['[5, 7, 8]', '[1, 2, 3, 4, 5]', '[1, 2, 3, [4, 5]]', 'Błąd (Error)'],
+      correct: [1],
+      explanation: 'Operator <code>+</code> dla list wykonuje konkatenację (łączenie), a nie dodawanie elementów. Wynikiem jest <code>[1, 2, 3, 4, 5]</code>.'
+    },
+    {
+      id: 15, lesson: 5, difficulty: 4, type: 'single',
+      q: 'Co zwróci wyrażenie <code>"abc"[::-1]</code>?',
+      options: ['"abc"', '"cba"', '""', 'Błąd (Error)'],
+      correct: [1],
+      explanation: 'Wycinek <code>[::-1]</code> tworzy kopię sekwencji w odwrotnej kolejności — klasyczny idiom do odwracania napisów i list. Wynikiem jest <code>"cba"</code>.'
+    },
+    {
+      id: 16, lesson: 5, difficulty: 4, type: 'fill',
+      q: 'Uzupełnij wyrażenie listowe (list comprehension) generujące kwadraty liczb od 0 do 4: <code>[x**2 for x in ___(5)]</code>.',
+      correct: ['range'],
+      explanation: '<code>range(5)</code> generuje sekwencję liczb <code>0, 1, 2, 3, 4</code>, więc wyrażenie da listę kwadratów <code>[0, 1, 4, 9, 16]</code>.'
+    },
+
+    /* ===================== LEKCJA 06 — Słowniki, zbiory i krotki ===================== */
+    {
+      id: 17, lesson: 6, difficulty: 1, type: 'single',
+      q: 'Jak dodać nowy klucz <code>"age"</code> o wartości <code>30</code> do słownika <code>dane</code>?',
+      options: ['dane.add("age", 30)', 'dane["age"] = 30', 'dane.append("age": 30)', 'dane.insert("age", 30)'],
+      correct: [1],
+      explanation: 'Nowy klucz dodaje się (lub aktualizuje istniejący) poprzez przypisanie wartości do indeksu: <code>dane["age"] = 30</code>.'
+    },
+    {
+      id: 18, lesson: 6, difficulty: 1, type: 'single',
+      q: 'Która z poniższych struktur danych jest niemutowalna (jej zawartości nie można zmienić po utworzeniu)?',
+      options: ['lista', 'słownik', 'zbiór (set)', 'krotka (tuple)'],
+      correct: [3],
+      explanation: 'Krotka (<code>tuple</code>) jest niemutowalna — po jej utworzeniu nie można dodawać, usuwać ani zmieniać elementów. Listy, słowniki i zbiory są mutowalne.'
+    },
+    {
+      id: 19, lesson: 6, difficulty: 2, type: 'single',
+      q: 'Co zwróci wyrażenie <code>len({1, 2, 2, 3, 3, 3})</code>?',
+      options: ['6', '2', '3', '5'],
+      correct: [2],
+      explanation: 'Zapis <code>{1, 2, 2, 3, 3, 3}</code> tworzy zbiór (<code>set</code>), który automatycznie usuwa duplikaty — w efekcie zbiór zawiera elementy <code>{1, 2, 3}</code>, a jego długość to <code>3</code>.'
+    },
+    {
+      id: 20, lesson: 6, difficulty: 2, type: 'fill',
+      q: 'Aby pobrać wartość ze słownika bez ryzyka błędu <code>KeyError</code>, gdy danego klucza może nie być, używamy metody <code>słownik.___()</code>.',
+      correct: ['get'],
+      explanation: 'Metoda <code>get()</code> zwraca wartość dla podanego klucza, a jeśli klucz nie istnieje — zwraca <code>None</code> (lub wartość domyślną), bez zgłaszania wyjątku.'
+    },
+    {
+      id: 21, lesson: 6, difficulty: 3, type: 'multi',
+      q: 'Które z poniższych są poprawnymi metodami/operacjami dla zbiorów (<code>set</code>) w Pythonie?',
+      options: ['union()', 'intersection()', 'append()', 'difference()'],
+      correct: [0, 1, 3],
+      explanation: 'Zbiory wspierają operacje matematyczne: <code>union()</code> (suma), <code>intersection()</code> (przecięcie) i <code>difference()</code> (różnica). Metoda <code>append()</code> nie istnieje dla zbiorów — do dodawania elementu służy <code>add()</code>.'
+    },
+    {
+      id: 22, lesson: 6, difficulty: 3, type: 'single',
+      q: 'Co zwraca wywołanie <code>{"a": 1, "b": 2}.items()</code>?',
+      options: ['listę kluczy słownika', 'listę wartości słownika', 'widok par (klucz, wartość) dla każdego elementu', 'błąd (Error)'],
+      correct: [2],
+      explanation: 'Metoda <code>items()</code> zwraca widok krotek (klucz, wartość), np. <code>dict_items([(\'a\', 1), (\'b\', 2)])</code> — przydatny do iterowania po słowniku.'
+    },
+    {
+      id: 23, lesson: 6, difficulty: 4, type: 'single',
+      q: 'Co się stanie po wykonaniu poniższego kodu?' +
+          '<pre><code>t = (1, 2, 3)\nt[0] = 99</code></pre>',
+      options: ['t = (99, 2, 3)', 'Zostanie zgłoszony TypeError', 'Zostanie zgłoszony IndexError', 'Nic się nie zmieni'],
+      correct: [1],
+      explanation: 'Krotki są niemutowalne, więc próba przypisania nowej wartości do istniejącego indeksu (<code>t[0] = 99</code>) zgłasza wyjątek <code>TypeError: \'tuple\' object does not support item assignment</code>.'
+    },
+    {
+      id: 24, lesson: 6, difficulty: 4, type: 'fill',
+      q: 'Po wykonaniu <code>a, b, *rest = (1, 2, 3, 4, 5)</code>, jaka będzie wartość zmiennej <code>rest</code>? (podaj w formie listy, np. <code>[x, y]</code>)',
+      correct: ['[3, 4, 5]'],
+      explanation: 'Operator <code>*</code> przy rozpakowywaniu „zbiera” wszystkie pozostałe elementy do listy. <code>a = 1</code>, <code>b = 2</code>, a <code>rest = [3, 4, 5]</code>.'
+    },
+
+    /* ===================== LEKCJA 07 — Logika i pętle ===================== */
+    {
+      id: 25, lesson: 7, difficulty: 1, type: 'single',
+      q: 'Która instrukcja służy do iterowania po elementach sekwencji (lub wykonania kodu określoną liczbę razy)?',
+      options: ['while', 'for', 'if', 'def'],
+      correct: [1],
+      explanation: 'Pętla <code>for</code> służy do iterowania po elementach sekwencji (listy, stringa, zakresu itd.) — np. <code>for i in range(10):</code> wykona kod 10 razy.'
+    },
+    {
+      id: 26, lesson: 7, difficulty: 1, type: 'single',
+      q: 'Co robi instrukcja <code>break</code> użyta w pętli?',
+      options: ['pomija bieżącą iterację i przechodzi do następnej', 'natychmiast przerywa działanie całej pętli', 'kończy działanie całego programu', 'nic — jest ignorowana'],
+      correct: [1],
+      explanation: '<code>break</code> natychmiast przerywa wykonywanie całej pętli (for/while), niezależnie od warunku, i przechodzi do kodu po pętli.'
+    },
+    {
+      id: 27, lesson: 7, difficulty: 2, type: 'single',
+      q: 'Ile razy wykona się pętla <code>for i in range(2, 10, 3):</code>?',
+      options: ['2', '3', '4', '8'],
+      correct: [1],
+      explanation: '<code>range(2, 10, 3)</code> generuje wartości <code>2, 5, 8</code> (kolejna wartość, 11, przekracza 10) — pętla wykona się <strong>3</strong> razy.'
+    },
+    {
+      id: 28, lesson: 7, difficulty: 2, type: 'fill',
+      q: 'Jaka instrukcja pomija resztę kodu w bieżącej iteracji pętli i przechodzi do następnej iteracji?',
+      correct: ['continue'],
+      explanation: '<code>continue</code> przerywa bieżącą iterację i przechodzi do kolejnej, bez wykonywania pozostałego kodu w pętli dla tej iteracji.'
+    },
+    {
+      id: 29, lesson: 7, difficulty: 3, type: 'multi',
+      q: 'Które z poniższych wyrażeń logicznych mają wartość <code>True</code>?',
+      options: ['5 &gt; 3 and 2 &lt; 1', 'not (5 == 5)', '(3 &gt; 2) or (1 &gt; 2)', '10 % 2 == 0'],
+      correct: [2, 3],
+      explanation: 'a) <code>5 &gt; 3 and 2 &lt; 1</code> → <code>True and False</code> → <code>False</code>. b) <code>not (5 == 5)</code> → <code>not True</code> → <code>False</code>. c) <code>(3 &gt; 2) or (1 &gt; 2)</code> → <code>True or False</code> → <code>True</code>. d) <code>10 % 2 == 0</code> → <code>0 == 0</code> → <code>True</code>.'
+    },
+    {
+      id: 30, lesson: 7, difficulty: 3, type: 'single',
+      q: 'Co zwróci <code>list(enumerate(["a", "b", "c"]))</code>?',
+      options: ['[0, 1, 2]', '["a", "b", "c"]', '[(0, "a"), (1, "b"), (2, "c")]', 'błąd (Error)'],
+      correct: [2],
+      explanation: '<code>enumerate()</code> tworzy iterator par (indeks, element) — po zamianie na listę otrzymamy <code>[(0, \'a\'), (1, \'b\'), (2, \'c\')]</code>.'
+    },
+    {
+      id: 31, lesson: 7, difficulty: 4, type: 'single',
+      q: 'Jaki będzie wynik działania poniższego kodu?' +
+          '<pre><code>total = 0\nfor i in range(1, 5):\n    if i % 2 == 0:\n        continue\n    total += i\nprint(total)</code></pre>',
+      options: ['10', '4', '6', '1'],
+      correct: [1],
+      explanation: '<code>range(1, 5)</code> daje <code>1, 2, 3, 4</code>. Dla liczb parzystych (<code>2</code>, <code>4</code>) <code>continue</code> pomija dodawanie. Sumowane są tylko <code>1</code> i <code>3</code>, więc <code>total = 4</code>.'
+    },
+    {
+      id: 32, lesson: 7, difficulty: 4, type: 'fill',
+      q: 'Pętla <code>while True:</code> bez żadnej instrukcji <code>break</code> ani warunku zatrzymania nazywana jest pętlą ___.',
+      correct: ['nieskończona', 'nieskonczona petla', 'petla nieskonczona', 'infinite', 'infinite loop'],
+      explanation: 'Taka pętla nigdy nie zakończy się sama — jest to pętla <strong>nieskończona</strong> (infinite loop). Aby ją zatrzymać, potrzebny jest <code>break</code> lub zmiana warunku.'
+    },
+
+    /* ===================== LEKCJA 08 — Funkcje i idiomy ===================== */
+    {
+      id: 33, lesson: 8, difficulty: 1, type: 'single',
+      q: 'Jakie słowo kluczowe służy do definiowania funkcji w Pythonie?',
+      options: ['function', 'def', 'func', 'lambda'],
+      correct: [1],
+      explanation: 'Funkcje definiuje się słowem kluczowym <code>def</code>, np. <code>def moja_funkcja():</code>.'
+    },
+    {
+      id: 34, lesson: 8, difficulty: 1, type: 'single',
+      q: 'Co zwraca funkcja, w której nie ma instrukcji <code>return</code>?',
+      options: ['0', '"" (pusty string)', 'None', 'błąd (Error)'],
+      correct: [2],
+      explanation: 'Jeśli funkcja nie zawiera instrukcji <code>return</code> (lub <code>return</code> jest bez wartości), domyślnie zwraca <code>None</code>.'
+    },
+    {
+      id: 35, lesson: 8, difficulty: 2, type: 'single',
+      q: 'Co zwróci wyrażenie <code>(lambda x: x * 2)(5)</code>?',
+      options: ['5', '10', '25', 'błąd (Error)'],
+      correct: [1],
+      explanation: 'Tworzymy funkcję anonimową <code>lambda x: x * 2</code> i natychmiast wywołujemy ją z argumentem <code>5</code>, co daje <code>5 * 2 = 10</code>.'
+    },
+    {
+      id: 36, lesson: 8, difficulty: 2, type: 'fill',
+      q: 'Aby przyjąć w funkcji nieokreśloną liczbę argumentów pozycyjnych, w definicji używamy <code>*___</code>.',
+      correct: ['args'],
+      explanation: 'Konwencjonalnie zapisuje się to jako <code>*args</code> — gwiazdka pakuje wszystkie dodatkowe argumenty pozycyjne do krotki o nazwie <code>args</code>.'
+    },
+    {
+      id: 37, lesson: 8, difficulty: 3, type: 'multi',
+      q: 'Które z poniższych są poprawnymi (zgodnymi ze składnią) definicjami funkcji z argumentami domyślnymi?',
+      options: ['def f(x=5): ...', 'def f(x, y=10): ...', 'def f(x=5, y): ...', 'def f(*args, x=5): ...'],
+      correct: [0, 1, 3],
+      explanation: 'a) i b) są poprawne — argument z wartością domyślną może występować samodzielnie lub po argumencie bez wartości domyślnej. c) jest <strong>błędna</strong> — argument bez wartości domyślnej nie może następować po argumencie z wartością domyślną (<code>SyntaxError</code>). d) jest poprawna — po <code>*args</code> mogą występować argumenty nazwane (keyword-only) z wartościami domyślnymi.'
+    },
+    {
+      id: 38, lesson: 8, difficulty: 3, type: 'single',
+      q: 'Co zwróci <code>list(map(lambda x: x ** 2, [1, 2, 3]))</code>?',
+      options: ['[1, 2, 3]', '[1, 4, 9]', 'obiekt map', 'błąd (Error)'],
+      correct: [1],
+      explanation: '<code>map()</code> stosuje podaną funkcję do każdego elementu — <code>1**2=1</code>, <code>2**2=4</code>, <code>3**2=9</code>. Po zamianie na listę: <code>[1, 4, 9]</code>.'
+    },
+    {
+      id: 39, lesson: 8, difficulty: 4, type: 'single',
+      q: 'Jaki będzie wynik działania poniższego kodu?' +
+          '<pre><code>def f(a, b=[]):\n    b.append(a)\n    return b\n\nprint(f(1))\nprint(f(2))</code></pre>',
+      options: ['[1] a potem [2]', '[1] a potem [1, 2]', 'błąd (Error)', '[1, 2] a potem [1, 2]'],
+      correct: [1],
+      explanation: 'To klasyczna „pułapka” mutowalnego argumentu domyślnego — lista <code>b=[]</code> jest tworzona <strong>tylko raz</strong>, przy definicji funkcji, i współdzielona między wywołaniami. Pierwsze wywołanie da <code>[1]</code>, a drugie — dopisując do tej samej listy — da <code>[1, 2]</code>.'
+    },
+    {
+      id: 40, lesson: 8, difficulty: 4, type: 'fill',
+      q: 'Funkcja, która przyjmuje inną funkcję jako argument lub zwraca funkcję jako wynik, nazywana jest funkcją wyższego ___.',
+      correct: ['rzędu', 'order'],
+      explanation: 'Funkcje przyjmujące inną funkcję jako argument lub zwracające funkcję jako wynik (np. <code>map</code>, <code>filter</code>, dekoratory, domknięcia) nazywamy funkcjami <strong>wyższego rzędu</strong> (higher-order functions) — to jeden z kluczowych idiomów programowania funkcyjnego w Pythonie.'
+    }
+  ];
+
+  /* ---------- Pomocnicze ---------- */
+  function normalize(s) {
+    const map = {'ą':'a','ć':'c','ę':'e','ł':'l','ń':'n','ó':'o','ś':'s','ź':'z','ż':'z'};
+    return String(s).toLowerCase().trim()
+      .split('').map(ch => map[ch] || ch).join('')
+      .replace(/[\s\[\]\(\)\*\.]/g, '');
+  }
+
+  /* ---------- Renderowanie ---------- */
+  function renderCell(q) {
+    let inputsHtml;
+    if (q.type === 'single' || q.type === 'multi') {
+      const inputType = q.type === 'single' ? 'radio' : 'checkbox';
+      inputsHtml = '<div class="options">' + q.options.map((opt, i) =>
+        `<label class="opt"><input type="${inputType}" name="q${q.id}" value="${i}"><span>${opt}</span></label>`
+      ).join('') + '</div>';
+    } else {
+      inputsHtml = `<div class="fill"><span class="prompt">&gt;&gt;&gt;</span><input type="text" id="q${q.id}" autocomplete="off" spellcheck="false" placeholder="Twoja odpowiedź..."></div>`;
+    }
+
+    let typeBadge = '';
+    if (q.type === 'multi') typeBadge = '<span class="badge type-badge">wybór wielokrotny</span>';
+    if (q.type === 'fill')  typeBadge = '<span class="badge type-badge">uzupełnij lukę</span>';
+
+    return `<article class="cell cell-diff${q.difficulty}" data-id="${q.id}" data-lesson="${q.lesson}" data-diff="${q.difficulty}">
+      <div class="cell-head">
+        <span class="in-label">In [${q.id}]:</span>
+        <span class="badge lesson-badge">${LESSON_NAMES[q.lesson]}</span>
+        <span class="badge diff${q.difficulty}">${DIFF_NAMES[q.difficulty]}</span>
+        ${typeBadge}
+      </div>
+      <div class="cell-body">
+        <div class="question">${q.q}</div>
+        ${inputsHtml}
+      </div>
+      <div class="out-cell hidden" id="out${q.id}"></div>
+    </article>`;
+  }
+
+  function renderQuiz() {
+    document.getElementById('quiz').innerHTML = questions.map(renderCell).join('');
+    questions.forEach(q => {
+      if (q.type === 'fill') {
+        document.getElementById(`q${q.id}`).addEventListener('input', updateProgress);
+      } else {
+        document.querySelectorAll(`input[name="q${q.id}"]`).forEach(inp => inp.addEventListener('change', updateProgress));
+      }
+    });
+    updateProgress();
+  }
+
+  /* ---------- Postęp ---------- */
+  function isAnswered(q) {
+    if (q.type === 'fill') {
+      const el = document.getElementById(`q${q.id}`);
+      return !!el && el.value.trim() !== '';
+    }
+    return document.querySelector(`input[name="q${q.id}"]:checked`) !== null;
+  }
+
+  function updateProgress() {
+    const answered = questions.filter(isAnswered).length;
+    document.getElementById('progress').textContent = `${answered} / ${questions.length} odpowiedzi`;
+  }
+
+  /* ---------- Sprawdzanie ---------- */
+  function checkAnswers() {
+    let correctCount = 0;
+    const lessonStats = {};
+    const diffStats = {};
+
+    questions.forEach(q => {
+      const cell = document.querySelector(`.cell[data-id="${q.id}"]`);
+      const out = document.getElementById(`out${q.id}`);
+      let isCorrect = false;
+      let userVal = '';
+
+      if (q.type === 'single') {
+        const sel = cell.querySelector(`input[name="q${q.id}"]:checked`);
+        isCorrect = !!sel && parseInt(sel.value, 10) === q.correct[0];
+      } else if (q.type === 'multi') {
+        const sel = [...cell.querySelectorAll(`input[name="q${q.id}"]:checked`)].map(i => parseInt(i.value, 10)).sort();
+        const corr = [...q.correct].sort();
+        isCorrect = sel.length === corr.length && sel.every((v, i) => v === corr[i]);
+      } else {
+        const inputEl = document.getElementById(`q${q.id}`);
+        userVal = inputEl.value.trim();
+        const norm = normalize(userVal);
+        isCorrect = norm !== '' && q.correct.some(c => normalize(c) === norm);
+      }
+
+      if (isCorrect) correctCount++;
+
+      lessonStats[q.lesson] = lessonStats[q.lesson] || { correct: 0, total: 0 };
+      lessonStats[q.lesson].total++;
+      if (isCorrect) lessonStats[q.lesson].correct++;
+
+      diffStats[q.difficulty] = diffStats[q.difficulty] || { correct: 0, total: 0 };
+      diffStats[q.difficulty].total++;
+      if (isCorrect) diffStats[q.difficulty].correct++;
+
+      cell.classList.remove('correct', 'incorrect');
+      cell.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+      // Podświetlenie odpowiedzi w opcjach
+      let correctDisplay = '';
+      if (q.type === 'single' || q.type === 'multi') {
+        const correctSet = new Set(q.correct);
+        cell.querySelectorAll('.opt').forEach((label, idx) => {
+          const input = label.querySelector('input');
+          if (correctSet.has(idx)) {
+            label.classList.add('opt-correct');
+          } else if (input.checked) {
+            label.classList.add('opt-wrong');
+          }
+        });
+        correctDisplay = q.type === 'single'
+          ? q.options[q.correct[0]]
+          : q.correct.map(i => q.options[i]).join(', ');
+      } else {
+        correctDisplay = q.correct[0];
+      }
+
+      let bodyHtml = `<p class="verdict ${isCorrect ? 'ok' : 'bad'}">${isCorrect ? '✓ Poprawnie' : '✗ Niepoprawnie'}</p>`;
+      if (!isCorrect) {
+        if (q.type === 'fill') {
+          bodyHtml += `<p class="user-answer">Twoja odpowiedź: <em>${userVal || '(brak odpowiedzi)'}</em></p>`;
+        }
+        bodyHtml += `<p class="correct-answer">Poprawna odpowiedź: <strong>${correctDisplay}</strong></p>`;
+      }
+      bodyHtml += `<p class="explanation">${q.explanation}</p>`;
+
+      out.innerHTML = `<span class="out-label ${isCorrect ? 'ok' : 'bad'}">Out[${q.id}]:</span><div class="out-body">${bodyHtml}</div>`;
+      out.classList.remove('hidden');
+    });
+
+    renderSummary(correctCount, lessonStats, diffStats);
+    document.getElementById('summary').classList.remove('hidden');
+    document.getElementById('summary').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderSummary(correct, lessonStats, diffStats) {
+    const total = questions.length;
+    const pct = Math.round((correct / total) * 100);
+    document.getElementById('summaryScore').textContent = `${correct} / ${total} (${pct}%)`;
+
+    const lessonHtml = Object.keys(lessonStats).sort().map(l => {
+      const s = lessonStats[l];
+      const p = Math.round((s.correct / s.total) * 100);
+      return `<div class="stat-row">
+        <span class="stat-label">${LESSON_NAMES[l]}</span>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:${p}%; background:var(--accent);"></div></div>
+        <span class="stat-val">${s.correct}/${s.total}</span>
+      </div>`;
+    }).join('');
+
+    const diffHtml = Object.keys(diffStats).sort().map(d => {
+      const s = diffStats[d];
+      const p = Math.round((s.correct / s.total) * 100);
+      return `<div class="stat-row">
+        <span class="stat-label">${DIFF_NAMES[d]}</span>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:${p}%; background:${DIFF_VARS[d]};"></div></div>
+        <span class="stat-val">${s.correct}/${s.total}</span>
+      </div>`;
+    }).join('');
+
+    document.getElementById('lessonStats').innerHTML = lessonHtml;
+    document.getElementById('diffStats').innerHTML = diffHtml;
+  }
+
+  /* ---------- Reset ---------- */
+  function resetQuiz() {
+    questions.forEach(q => {
+      if (q.type === 'fill') {
+        document.getElementById(`q${q.id}`).value = '';
+      } else {
+        document.querySelectorAll(`input[name="q${q.id}"]`).forEach(i => { i.checked = false; });
+      }
+      const cell = document.querySelector(`.cell[data-id="${q.id}"]`);
+      cell.classList.remove('correct', 'incorrect');
+      cell.querySelectorAll('.opt').forEach(label => label.classList.remove('opt-correct', 'opt-wrong'));
+      const out = document.getElementById(`out${q.id}`);
+      out.classList.add('hidden');
+      out.innerHTML = '';
+    });
+    document.getElementById('summary').classList.add('hidden');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---------- Filtry ---------- */
+  function applyFilters() {
+    const lessonVal = document.querySelector('[data-filter-group="lesson"] .filter-btn.active').dataset.value;
+    const diffVal = document.querySelector('[data-filter-group="diff"] .filter-btn.active').dataset.value;
+    document.querySelectorAll('.cell').forEach(cell => {
+      const matchLesson = lessonVal === 'all' || cell.dataset.lesson === lessonVal;
+      const matchDiff = diffVal === 'all' || cell.dataset.diff === diffVal;
+      cell.style.display = (matchLesson && matchDiff) ? '' : 'none';
+    });
+  }
+
+  document.querySelectorAll('.filter-pills').forEach(group => {
+    group.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    });
+  });
+
+  document.getElementById('checkBtn').addEventListener('click', checkAnswers);
+  document.getElementById('resetBtn').addEventListener('click', resetQuiz);
+
+  renderQuiz();
+</script>
+
+</body>
+</html>
