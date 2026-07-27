@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Statystyka i Prawdopodobieństwo | DS02-05-26</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1117;--surface:#161b22;--card:#1c2128;--border:#30363d;--border2:#21262d;
+    --text:#e6edf3;--muted:#7d8590;
+    --gr:#4ade80;--gr-bg:rgba(74,222,128,.08);--gr-bd:rgba(74,222,128,.28);
+    --green:#3fb950;--green-bg:rgba(63,185,80,.10);--green-bd:rgba(63,185,80,.32);
+    --red:#f85149;--red-bg:rgba(248,81,73,.10);--red-bd:rgba(248,81,73,.32);
+    --amber:#e3b341;--amber-bg:rgba(227,179,65,.08);--amber-bd:rgba(227,179,65,.28);
+    --kw:#ff7b72;--fn:#4ade80;--str:#a5d6ff;--num:#79c0ff;--cmt:#8b949e;
+    --mono:'JetBrains Mono',monospace;--sans:'Inter',system-ui,sans-serif;
+  }
+  html{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+  body{display:flex;flex-direction:column;align-items:center;padding:36px 16px 60px}
+  .hdr{text-align:center;margin-bottom:26px}
+  .hdr-eye{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .hdr-title{font-size:26px;font-weight:700;margin-bottom:6px}
+  .hdr-sub{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .hdr-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  .htag{padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;
+    font-family:var(--mono);background:var(--gr-bg);border:1px solid var(--gr-bd);color:var(--gr)}
+  .prog-wrap{width:100%;max-width:740px;margin-bottom:20px}
+  .prog-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:7px}
+  .prog-track{height:3px;background:var(--border);border-radius:99px;overflow:hidden}
+  .prog-fill{height:100%;background:linear-gradient(90deg,#166534,#4ade80);border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+  .card{width:100%;max-width:740px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .q-head{padding:20px 24px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:flex-start;gap:14px}
+  .q-num{flex-shrink:0;width:34px;height:34px;border-radius:9px;background:var(--gr-bg);border:1px solid var(--gr-bd);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--gr)}
+  .q-tag{display:inline-block;margin-bottom:6px;padding:2px 9px;border-radius:4px;background:var(--gr-bg);border:1px solid var(--gr-bd);font-family:var(--mono);font-size:10px;font-weight:600;color:var(--gr);letter-spacing:.05em;text-transform:uppercase}
+  .q-txt{font-size:15px;line-height:1.65;color:var(--text);font-weight:500}
+  .q-txt code{font-family:var(--mono);font-size:12.5px;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px}
+  .code-wrap{padding:14px 24px 0}
+  .code-box{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:14px 16px;font-family:var(--mono);font-size:13px;line-height:2;overflow-x:auto;white-space:pre}
+  .kw{color:var(--kw);font-weight:600}.fn{color:var(--fn)}.str{color:var(--str)}.num{color:var(--num)}.cmt{color:var(--cmt);font-style:italic}
+  .blank-wrap{display:inline-block;position:relative;vertical-align:middle;margin:0 2px}
+  .blank-input{font-family:var(--mono);font-size:13px;background:rgba(74,222,128,.10);border:1.5px dashed rgba(74,222,128,.5);border-radius:5px;color:var(--gr);padding:2px 8px;outline:none;transition:border-color .15s,background .15s;min-width:36px}
+  .blank-input:focus{border-color:var(--gr);background:rgba(74,222,128,.18)}
+  .blank-input.ok{background:var(--green-bg)!important;border-color:var(--green-bd)!important;color:var(--green)!important;border-style:solid!important}
+  .blank-input.ng{background:var(--red-bg)!important;border-color:var(--red-bd)!important;color:var(--red)!important;border-style:solid!important}
+  .blank-input:disabled{cursor:default}
+  .correct-label{font-size:11px;color:var(--green);font-family:var(--mono);position:absolute;top:-20px;left:0;white-space:nowrap;display:none}
+  .blank-input.ng ~ .correct-label{display:block}
+  .ans-area{padding:14px 24px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .ans-label{font-size:12px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+  .hint-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--amber-bd);background:var(--amber-bg);color:var(--amber);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer}
+  .hint-btn:hover{opacity:.8}.hint-btn:disabled{opacity:.35;cursor:default}
+  .check-btn{padding:7px 20px;border-radius:7px;border:none;cursor:pointer;background:#166534;color:#fff;font-family:var(--sans);font-size:13px;font-weight:600}
+  .check-btn:hover{background:#15803d}.check-btn:disabled{opacity:.3;cursor:default}
+  .hint-box{margin:10px 24px 0;padding:10px 14px;border-radius:8px;background:var(--amber-bg);border:1px solid var(--amber-bd);font-size:12.5px;color:var(--amber);font-family:var(--mono);display:none}
+  .hint-box.show{display:block}
+  .fb{margin:14px 24px 0;padding:12px 15px;border-radius:8px;font-size:13px;line-height:1.6;display:none;gap:10px;align-items:flex-start}
+  .fb.show{display:flex}
+  .fb.ok{background:var(--green-bg);border:1px solid var(--green-bd);color:#7ee787}
+  .fb.ng{background:var(--red-bg);border:1px solid var(--red-bd);color:#ffa198}
+  .fb-icon{font-size:15px;flex-shrink:0;padding-top:1px}
+  .card-foot{padding:14px 24px;border-top:1px solid var(--border2);margin-top:18px;display:flex;justify-content:space-between;align-items:center}
+  .foot-hint{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .next-btn{padding:10px 24px;border-radius:8px;border:none;cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;background:#166534;color:#fff}
+  .next-btn:hover{background:#15803d}.next-btn:disabled{opacity:.3;cursor:default}
+  #sc{display:none;width:100%;max-width:740px}
+  .sc-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:40px 32px;text-align:center}
+  .sc-ring{width:130px;height:130px;margin:0 auto 22px;position:relative}
+  .sc-ring svg{transform:rotate(-90deg)}
+  .sc-bg{fill:none;stroke:var(--border);stroke-width:9}
+  .sc-arc{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1)}
+  .sc-mid{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  .sc-big{font-size:30px;font-weight:700;font-family:var(--mono)}
+  .sc-den{font-size:13px;color:var(--muted);font-family:var(--mono)}
+  .sc-lbl{font-size:20px;font-weight:700;margin-bottom:7px}
+  .sc-sub{font-size:13.5px;color:var(--muted);margin-bottom:26px}
+  .sc-dots{display:grid;grid-template-columns:repeat(15,1fr);gap:5px;margin-bottom:26px}
+  .sc-dot{height:6px;border-radius:99px;background:var(--green)}
+  .sc-dot.ng{background:var(--red)}
+  .rv{text-align:left;margin-bottom:26px}
+  .rv-item{padding:11px 15px;border-radius:8px;margin-bottom:7px;border:1px solid var(--red-bd);background:var(--surface);font-size:12.5px}
+  .rv-q{color:var(--muted);font-family:var(--mono);font-size:11px;margin-bottom:4px}
+  .rv-wrong{color:var(--red);font-family:var(--mono)}.rv-right{color:var(--green);font-family:var(--mono)}
+  .btn-rs{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:11px 28px;border-radius:8px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer}
+  .btn-rs:hover{border-color:var(--gr)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-eye">DS02-05-26 · LearnIT · Michał Szłapa</div>
+  <div class="hdr-title">Quiz — Statystyka i Prawdopodobieństwo</div>
+  <div class="hdr-sub">15 pytań · te same pojęcia co na L16 · nowe przykłady · Enter = sprawdź</div>
+  <div class="hdr-tags">
+    <span class="htag">CDF / PDF</span><span class="htag">SHAPIRO</span>
+    <span class="htag">PEARSON</span><span class="htag">SPEARMAN</span>
+    <span class="htag">T-TEST</span><span class="htag">CHI²</span>
+    <span class="htag">BINOM / POISSON</span><span class="htag">GREEN IT</span>
+  </div>
+</div>
+
+<div class="prog-wrap">
+  <div class="prog-meta"><span id="plbl">Pytanie 1 z 15</span><span id="psco"></span></div>
+  <div class="prog-track"><div class="prog-fill" id="pfill" style="width:4%"></div></div>
+</div>
+
+<div class="card" id="qcard">
+  <div class="q-head">
+    <div class="q-num" id="qnum">1</div>
+    <div><div class="q-tag" id="qtag">TAG</div><div class="q-txt" id="qtxt"></div></div>
+  </div>
+  <div class="code-wrap"><div class="code-box" id="cbox"></div></div>
+  <div class="ans-area">
+    <span class="ans-label">↑ uzupełnij lukę:</span>
+    <button class="hint-btn" id="hbtn" onclick="showHint()">💡 podpowiedź</button>
+    <button class="check-btn" id="cbtn" onclick="checkAnswer()">Sprawdź</button>
+  </div>
+  <div class="hint-box" id="hbox"></div>
+  <div class="fb" id="fb"><span class="fb-icon" id="fbico"></span><span id="fbtxt"></span></div>
+  <div class="card-foot">
+    <span class="foot-hint" id="fhint"></span>
+    <button class="next-btn" id="nbtn" disabled onclick="next()">Dalej →</button>
+  </div>
+</div>
+
+<div id="sc">
+  <div class="sc-card">
+    <div class="sc-ring">
+      <svg width="130" height="130" viewBox="0 0 130 130">
+        <circle class="sc-bg" cx="65" cy="65" r="56"/>
+        <circle class="sc-arc" id="sarc" cx="65" cy="65" r="56" stroke-dasharray="351.9" stroke-dashoffset="351.9"/>
+      </svg>
+      <div class="sc-mid"><div class="sc-big" id="sfin">0</div><div class="sc-den">/ 15</div></div>
+    </div>
+    <div class="sc-lbl" id="slbl"></div>
+    <div class="sc-sub" id="ssub"></div>
+    <div class="sc-dots" id="sdots"></div>
+    <div class="rv" id="rvlist"></div>
+    <button class="btn-rs" onclick="restart()">↺ Spróbuj ponownie</button>
+  </div>
+</div>
+
+<script>
+const Q = [
+  {
+    tag:'Dystrybuanta — P(ocena < próg)',
+    txt:'Wyniki kolokwium mają rozkład N(μ=65, σ=12). Oblicz ile studentów dostało poniżej 50 pkt.',
+    code:
+`<span class="cmt"># Wyniki kolokwium ~ N(65, 12)</span>
+mu, sigma = <span class="num">65</span>, <span class="num">12</span>
+
+<span class="cmt"># P(wynik < 50) — jaki % studentów obleje?</span>
+p_fail = stats.norm.{{BLANK:3}}(<span class="num">50</span>, mu, sigma)
+<span class="fn">print</span>(<span class="str">f"P(wynik < 50) = {p_fail:.4f} ({p_fail*100:.2f}%)"</span>)`,
+    answers:['cdf'],correct:'cdf',
+    hint:'CDF = Cumulative Distribution Function → P(X ≤ x). Dla norm: cdf(x, mean, std).',
+    exp:'stats.norm.cdf(x, mean, std) daje P(X ≤ x). Wynik: cdf(50, 65, 12) ≈ 10.6% — tylko taki % studentów dostanie poniżej 50. Odwrotnie: P(X > 50) = 1 - cdf(50, 65, 12) ≈ 89.4%. Na lekcji używaliśmy tego dla wzrostu — ta sama funkcja, inny kontekst!'
+  },
+  {
+    tag:'Gęstość — PDF rozkładu IQ',
+    txt:'Narysuj krzywą gęstości dla rozkładu IQ ~ N(100, 15). Jakiej metody stats używamy na osi Y?',
+    code:
+`<span class="cmt"># IQ ma rozkład normalny N(100, 15)</span>
+x = np.<span class="fn">linspace</span>(<span class="num">40</span>, <span class="num">160</span>, <span class="num">300</span>)
+
+ax.<span class="fn">plot</span>(x, stats.norm.{{BLANK:3}}(x, <span class="num">100</span>, <span class="num">15</span>),
+       <span class="str">'r-'</span>, lw=<span class="num">2.5</span>, label=<span class="str">'N(100, 15) — IQ'</span>)`,
+    answers:['pdf'],correct:'pdf',
+    hint:'PDF = Probability Density Function → wysokość krzywej w punkcie x. To NIE jest prawdopodobieństwo!',
+    exp:'stats.norm.pdf(x, 100, 15) oblicza f(x) — wartość funkcji gęstości. Prawdopodobieństwo = pole pod krzywą między dwoma punktami, czyli cdf(b) - cdf(a). P(IQ ∈ [85, 115]) = cdf(115, 100, 15) - cdf(85, 100, 15) ≈ 68.27% — reguła 1σ!'
+  },
+  {
+    tag:'Normalność — wiek pasażerów',
+    txt:'Sprawdź czy kolumna Age w datasecie Titanic ma rozkład normalny. Jakiej funkcji używasz?',
+    code:
+`age = titanic[<span class="str">'Age'</span>].<span class="fn">dropna</span>()
+
+<span class="cmt"># Test H₀: dane mają rozkład normalny</span>
+W, p = {{BLANK:6}}(age)
+<span class="fn">print</span>(<span class="str">f"W={W:.4f}, p={p:.4f}"</span>)
+<span class="fn">print</span>(<span class="str">"Normalny?"</span>, <span class="str">"TAK"</span> <span class="kw">if</span> p > <span class="num">0.05</span> <span class="kw">else</span> <span class="str">"NIE"</span>)`,
+    answers:['shapiro'],correct:'shapiro',
+    hint:'Test Shapiro-Wilka z modułu scipy.stats. Zwraca (W, p) — W bliskie 1 = normalny.',
+    exp:'shapiro(data) → (W, p). Titanic Age: p prawdopodobnie < 0.05 — wiek nie jest normalny (prawa skośność, brak dzieci <5 lat, zgrupowanie w okolicach 20-30 lat). Zawsze sprawdzaj też Q-Q plot — sam test Shapiro to za mało!'
+  },
+  {
+    tag:'Q-Q plot — ceny biletów',
+    txt:'Narysuj Q-Q plot dla kolumny Fare z Titanica żeby zbadać normalność wzrokowo.',
+    code:
+`fare = titanic[<span class="str">'Fare'</span>].<span class="fn">dropna</span>()
+
+<span class="cmt"># Q-Q plot — porównanie kwantyli z N(0,1)</span>
+(osm, osr), (slope, intercept, r) = stats.{{BLANK:8}}(fare, dist=<span class="str">'norm'</span>)
+
+ax.<span class="fn">scatter</span>(osm, osr, s=<span class="num">15</span>, alpha=<span class="num">0.5</span>)
+ax.<span class="fn">plot</span>([osm.<span class="fn">min</span>(), osm.<span class="fn">max</span>()],
+       [slope*osm.<span class="fn">min</span>()+intercept, slope*osm.<span class="fn">max</span>()+intercept], <span class="str">'r-'</span>)`,
+    answers:['probplot'],correct:'probplot',
+    hint:'Probability plot — jeśli punkty leżą na linii = normalny. Ogony wyginające się = nienormalny.',
+    exp:'stats.probplot(data, dist="norm") → (kwantyle_teoret, kwantyle_emp), (slope, intercept, r). Titanic Fare: silnie prawostronny (bilety 1 klasy to outliery) → punkty na Q-Q będą wyraźnie wyginać się w górę po prawej. Idealnie normalne: punkty dokładnie na linii.'
+  },
+  {
+    tag:'Binomialny — wady produkcji',
+    txt:'Linia produkcyjna ma 2% wskaźnik wad. Z partii 50 sztuk — jakie P(0 wad)?',
+    code:
+`<span class="kw">from</span> scipy.stats <span class="kw">import</span> binom
+
+n, p_wada = <span class="num">50</span>, <span class="num">0.02</span>   <span class="cmt"># 50 sztuk, 2% wad</span>
+
+<span class="cmt"># P(X = 0) — żadnych wad w partii</span>
+p_zero = binom.{{BLANK:3}}(<span class="num">0</span>, n, p_wada)
+<span class="fn">print</span>(<span class="str">f"P(0 wad) = {p_zero:.4f}"</span>)  <span class="cmt"># ≈ 0.364</span>`,
+    answers:['pmf'],correct:'pmf',
+    hint:'PMF = Probability Mass Function → P(X = k). Dla dokładnej wartości k w rozkładzie dyskretnym.',
+    exp:'binom.pmf(k, n, p) oblicza P(X=k). pmf(0, 50, 0.02) = (0.98)^50 ≈ 0.364. Tylko ~36% partii jest w pełni bezwadnych! E[X] = n·p = 1 wada na partię. pmf vs cdf: pmf(k) = P(X=k), cdf(k) = P(X ≤ k). Na lekcji: monety — ta sama logika, inna interpretacja.'
+  },
+  {
+    tag:'Poisson — awarie systemu',
+    txt:'Serwer ma średnio λ=2 awarie na godzinę. Oblicz P(więcej niż 3 awarie w ciągu godziny).',
+    code:
+`<span class="kw">from</span> scipy.stats <span class="kw">import</span> poisson
+
+lam = <span class="num">2</span>   <span class="cmt"># średnia liczba awarii/h</span>
+
+<span class="cmt"># P(X > 3) = P(X ≥ 4) = 1 - P(X ≤ 3)</span>
+p_wiecej = poisson.{{BLANK:2}}(<span class="num">3</span>, lam)
+<span class="fn">print</span>(<span class="str">f"P(awarie > 3) = {p_wiecej:.4f}"</span>)`,
+    answers:['sf'],correct:'sf',
+    hint:'SF = Survival Function = 1 - CDF. sf(k, mu) = P(X > k). Argument to k, nie k-1!',
+    exp:'poisson.sf(3, 2) = P(X > 3) = 1 - P(X ≤ 3) ≈ 0.143. Czyli ~14% godzin będzie miało >3 awarie. Własność Poissona: E[X] = Var[X] = λ = 2. sf zamiast "1 - cdf" to wygodny skrót dostępny dla wszystkich rozkładów scipy.'
+  },
+  {
+    tag:'Korelacja Pearsona — pingwiny',
+    txt:'Sprawdź czy pingwiny z dłuższymi płetwami są cięższe. Dataset Penguins, kolumny: flipper_length_mm i body_mass_g.',
+    code:
+`pen = penguins.<span class="fn">dropna</span>(subset=[<span class="str">'flipper_length_mm'</span>, <span class="str">'body_mass_g'</span>])
+
+r, p = {{BLANK:8}}(pen[<span class="str">'flipper_length_mm'</span>],
+                   pen[<span class="str">'body_mass_g'</span>])
+<span class="fn">print</span>(<span class="str">f"r = {r:.3f},  R² = {r**2*100:.1f}%,  p = {p:.2e}"</span>)`,
+    answers:['pearsonr'],correct:'pearsonr',
+    hint:'Korelacja liniowa Pearsona. Zwraca (r, p_value). Działa najlepiej gdy obie zmienne są w przybliżeniu normalne.',
+    exp:'pearsonr() → (r, p). Flipper vs body_mass Penguins: r ≈ 0.87 — bardzo silna dodatnia korelacja. R² ≈ 76% — długość płetwy wyjaśnia 76% zmienności wagi. Ale uwaga: dane mieszają 3 gatunki → r jest zawyżone efektem gatunku (confounding variable)!'
+  },
+  {
+    tag:'Spearman — wynagrodzenia',
+    txt:'Dane płac w firmie są silnie skośne (kilku CEO zawyża). Który współczynnik wybrać?',
+    code:
+`<span class="cmt"># Dane: lata doświadczenia vs wynagrodzenie</span>
+<span class="cmt"># Wynagrodzenie silnie skośne — outliery!</span>
+doswiadczenie  = np.<span class="fn">array</span>([<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">5</span>,<span class="num">8</span>,<span class="num">10</span>,<span class="num">15</span>,<span class="num">20</span>,<span class="num">25</span>])
+wynagrodzenie  = np.<span class="fn">array</span>([<span class="num">4</span>,<span class="num">5</span>,<span class="num">6</span>,<span class="num">8</span>,<span class="num">12</span>,<span class="num">15</span>,<span class="num">22</span>,<span class="num">35</span>,<span class="num">200</span>])  <span class="cmt"># CEO!</span>
+
+rho, p = {{BLANK:9}}(doswiadczenie, wynagrodzenie)
+<span class="fn">print</span>(<span class="str">f"Spearman ρ = {rho:.3f}"</span>)`,
+    answers:['spearmanr'],correct:'spearmanr',
+    hint:'Spearman operuje na rangach → odporny na outlier 200 (CEO). Pearson byłby zaburzony tym punktem.',
+    exp:'spearmanr() → (rho, p). Dla tych danych Pearson ≈ 0.61, Spearman ≈ 0.98 — CEO jako outlier niszczy Pearsona. Spearman mierzy monoton. zależność (starszy = wyższe zarobki), niekoniecznie liniową. Zasada: dane płacowe, ceny nieruchomości, czasy ładowania stron → zawsze Spearman.'
+  },
+  {
+    tag:'Crosstab — procenty per rząd',
+    txt:'Wyświetl jaki % pasażerów z każdej klasy przeżył. Jak znormalizować crosstab per wiersz?',
+    code:
+`<span class="cmt"># Chcemy zobaczyć % przeżycia dla każdej klasy osobno</span>
+tabela_pct = pd.<span class="fn">crosstab</span>(
+    titanic[<span class="str">'Pclass'</span>],
+    titanic[<span class="str">'Survived'</span>],
+    normalize={{BLANK:7}}   <span class="cmt"># procenty per klasa (per rząd)</span>
+) * <span class="num">100</span>
+<span class="fn">print</span>(tabela_pct.<span class="fn">round</span>(<span class="num">1</span>))`,
+    answers:["'index'"],correct:"'index'",
+    hint:'"index" = normalizuj wzdłuż wierszy (każdy rząd sumuje się do 100%). Alternatywa: "columns" per kolumna lub True dla całości.',
+    exp:'normalize="index" sprawia że każdy wiersz (każda klasa) sumuje się do 100% → pokazuje jaki % danej klasy przeżył. Wynik: Klasa 1 ~63%, Klasa 2 ~47%, Klasa 3 ~24%. normalize="columns" byłoby per kolumna (z przeżałych jaki % to klasa X). normalize=True to % z całości.'
+  },
+  {
+    tag:'T-test jednej próbki — masa pingwinów',
+    txt:'Zbadaj hipotezę że pingwiny ważą średnio 4 kg. Jak podać wartość H₀ do ttest_1samp?',
+    code:
+`masa = penguins[<span class="str">'body_mass_g'</span>].<span class="fn">dropna</span>()
+
+<span class="cmt"># H₀: μ = 4000g  |  H₁: μ ≠ 4000g</span>
+t, p = <span class="fn">ttest_1samp</span>(masa, {{BLANK:7}}=<span class="num">4000</span>)
+<span class="fn">print</span>(<span class="str">f"Śr. masa: {masa.mean():.1f}g"</span>)
+<span class="fn">print</span>(<span class="str">f"t={t:.4f}, p={p:.4f}"</span>)`,
+    answers:['popmean'],correct:'popmean',
+    hint:'"popmean" = population mean = wartość μ z H₀. Drugi argument ttest_1samp, zawsze z nazwą!',
+    exp:'ttest_1samp(data, popmean=X) testuje H₀: μ = X. Pingwiny: masa ≈ 4202g, p < 0.05 → odrzucamy H₀ że μ = 4000g. Rzeczywiście ważą istotnie więcej niż 4 kg. Interpretacja: p to P(zobaczenia takiej różnicy gdyby H₀ była prawdziwa) — nie P(H₀ prawdziwa)!'
+  },
+  {
+    tag:'Test Levene\'a — napiwki pora dnia',
+    txt:'Porównaj napiwki na lunchu vs kolacji testem t. Najpierw sprawdź równość wariancji.',
+    code:
+`lunch  = tips[tips[<span class="str">'time'</span>]==<span class="str">'Lunch'</span>][<span class="str">'tip'</span>]
+dinner = tips[tips[<span class="str">'time'</span>]==<span class="str">'Dinner'</span>][<span class="str">'tip'</span>]
+
+<span class="cmt"># Czy wariancje są równe? — test przed ttest_ind</span>
+stat_l, p_l = {{BLANK:6}}(lunch, dinner)
+equal_var = p_l > <span class="num">0.05</span>
+<span class="fn">print</span>(<span class="str">f"Levene p={p_l:.4f} → equal_var={equal_var}"</span>)`,
+    answers:['levene'],correct:'levene',
+    hint:'levene(g1, g2) → (stat, p). Jeśli p < 0.05: wariancje różne → dodaj equal_var=False do ttest_ind.',
+    exp:'levene() testuje H₀: Var(g1) = Var(g2). Wynik przekazujemy do ttest_ind(lunch, dinner, equal_var=equal_var). Jeśli equal_var=False → Welch t-test (nie zakłada równych wariancji, bardziej konserwatywny). Tips: lunch vs dinner — wariancje podobne, ale sprawdzenie jest dobrą praktyką!'
+  },
+  {
+    tag:"Cohen's d — napiwki płeć",
+    txt:"Oblicz Cohen's d dla napiwków mężczyzn vs kobiet. Co wstawiasz w mianowniku pooled std?",
+    code:
+`men   = tips[tips[<span class="str">'sex'</span>]==<span class="str">'Male'</span>][<span class="str">'tip'</span>]
+women = tips[tips[<span class="str">'sex'</span>]==<span class="str">'Female'</span>][<span class="str">'tip'</span>]
+n1, n2 = <span class="fn">len</span>(men), <span class="fn">len</span>(women)
+
+pooled_std = np.<span class="fn">sqrt</span>(
+    ((n1-<span class="num">1</span>)*men.<span class="fn">var</span>() + (n2-<span class="num">1</span>)*women.<span class="fn">var</span>())
+    / (n1 + n2 {{BLANK:1}} <span class="num">2</span>)
+)
+d = <span class="fn">abs</span>(men.<span class="fn">mean</span>() - women.<span class="fn">mean</span>()) / pooled_std`,
+    answers:['-'],correct:'-',
+    hint:'n1 + n2 - 2 = łączne stopnie swobody. Odjęcie 2 (po jednym na każdą grupę) — korekcja Bessela dla pooled.',
+    exp:'n1 + n2 - 2 to stopnie swobody. Tips: mężczyźni dają średnio $3.09, kobiety $2.83 — różnica $0.26. d ≈ 0.18 → mały efekt (d < 0.2). p > 0.05 — różnica nieistotna statystycznie I mała praktycznie. Dobry przykład: nie odrzucamy H₀ bo efekt jest mały, NIE bo jest prawdziwe H₀!'
+  },
+  {
+    tag:'Chi-kwadrat — palacze a pora dnia',
+    txt:'Sprawdź czy palacze częściej przychodzą na kolację niż na lunch. Tabela kontyngencji Smoker × Time.',
+    code:
+`tabela = pd.<span class="fn">crosstab</span>(tips[<span class="str">'smoker'</span>], tips[<span class="str">'time'</span>])
+<span class="fn">print</span>(tabela)
+
+chi2, p, dof, expected = {{BLANK:18}}(tabela)
+<span class="fn">print</span>(<span class="str">f"χ²={chi2:.3f}, p={p:.4f}, dof={dof}"</span>)`,
+    answers:['chi2_contingency'],correct:'chi2_contingency',
+    hint:'Test niezależności dla dwóch zmiennych kategorycznych. Zawsze przekazuj obserwowaną tabelę (nie procenty!).',
+    exp:'chi2_contingency(tabela) → (chi2, p, dof, expected). Smoker × Time w Tips: prawdopodobnie p > 0.05 — pora dnia i palenie są niezależne. dof = (r-1)*(c-1) = 1*1 = 1 dla tabeli 2×2. "expected" to wartości oczekiwane gdyby H₀ (niezależność) była prawdziwa.'
+  },
+  {
+    tag:'A/B test — obustronne p-value',
+    txt:'Sklep testuje dwa układy strony (konwersja A=8%, B=11%). Oblicz obustronne p-value z z-statystyki.',
+    code:
+`<span class="cmt"># Z-test dla proporcji — czy B jest istotnie różne od A?</span>
+p_A, p_B = <span class="num">0.08</span>, <span class="num">0.11</span>
+se = <span class="num">0.0087</span>   <span class="cmt"># obliczone wcześniej</span>
+
+z_stat = (p_B - p_A) / se   <span class="cmt"># z_stat = 3.45</span>
+
+<span class="cmt"># Obustronne — liczy się odległość od 0, nie kierunek</span>
+p_val = <span class="num">2</span> * (<span class="num">1</span> - stats.norm.<span class="fn">cdf</span>({{BLANK:3}}(z_stat)))`,
+    answers:['abs'],correct:'abs',
+    hint:'abs() sprawia że test jest obustronny — nie ważne czy z > 0 czy z < 0. Liczymy P(|Z| > |z_obs|).',
+    exp:'2*(1-norm.cdf(abs(z))) = p-value dla testu "czy B ≠ A" (obustronny). abs() bo przy z=3.45: cdf(3.45) ≈ 0.9997, więc p ≈ 2*0.0003 = 0.0006 — silna istotność. Bez abs: ujemny z (gdy B < A) dałby p > 1. Jednostronny (B > A): "1 - norm.cdf(z_stat)" bez abs i mnożenia przez 2.'
+  },
+  {
+    tag:'Green IT — duże dane ankietowe',
+    txt:'Przetwarzasz wyniki ankiety: 100 tys. respondentów × 500 pytań. Jak zmniejszyć RAM o 50%?',
+    code:
+`<span class="cmt"># Wyniki ankiety: 100k respondentów, 500 pytań</span>
+<span class="cmt"># float64: 100_000 × 500 × 8 bajtów = 400 MB!</span>
+dane = np.random.<span class="fn">rand</span>(<span class="num">100_000</span>, <span class="num">500</span>)
+
+<span class="cmt"># Konwersja → 200 MB, pomijalna utrata precyzji</span>
+dane_lekkie = dane.<span class="fn">astype</span>(np.{{BLANK:7}})
+<span class="fn">print</span>(<span class="str">f"Przed: {dane.nbytes/1024**2:.0f} MB"</span>)
+<span class="fn">print</span>(<span class="str">f"Po:    {dane_lekkie.nbytes/1024**2:.0f} MB"</span>)`,
+    answers:['float32'],correct:'float32',
+    hint:'4 bajty zamiast 8 dla float64 → 50% mniej RAM. Wystarczy dla statystyk i ML. np.____ (7 liter).',
+    exp:'float32 (4B) vs float64 (8B) → 50% mniej pamięci. Różnica precyzji: ≈ 1e-7 — pomijalna dla współczynników korelacji czy p-values. Inne zasady Green IT z L16: NumPy zamiast pętli (~100× szybciej), testowanie kodu na próbce 10-20%, proste testy (t-test) zamiast kosztownych (bootstrap) gdy n > 100.'
+  },
+];
+
+let cur=0,score=0,answers=[],done=false;
+function renderBlank(c,idx){
+  return c.replace(/\{\{BLANK:(\d+)\}\}/g,(_,n)=>{
+    const w=parseInt(n)*9+18;
+    return `<span class="blank-wrap"><input class="blank-input" id="bl-${idx}" type="text" style="width:${w}px" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="${'_'.repeat(Math.max(parseInt(n)-1,2))}" onkeydown="if(event.key==='Enter')checkAnswer()"><span class="correct-label" id="cl-${idx}"></span></span>`;
+  });
+}
+function render(){
+  const q=Q[cur];
+  document.getElementById('qnum').textContent=cur+1;
+  document.getElementById('qtag').textContent=q.tag;
+  document.getElementById('qtxt').innerHTML=q.txt;
+  document.getElementById('cbox').innerHTML=renderBlank(q.code,cur);
+  document.getElementById('hbox').className='hint-box';
+  document.getElementById('fb').className='fb';
+  document.getElementById('hbtn').disabled=false;
+  document.getElementById('cbtn').disabled=false;
+  document.getElementById('nbtn').disabled=true;
+  document.getElementById('nbtn').textContent=cur<14?'Dalej →':'Zobacz wyniki';
+  document.getElementById('fhint').textContent=`${cur+1}/15 · Enter = sprawdź`;
+  done=false;prog();
+  setTimeout(()=>{const i=document.getElementById(`bl-${cur}`);if(i)i.focus();},80);
+}
+function showHint(){
+  document.getElementById('hbox').textContent='💡 '+Q[cur].hint;
+  document.getElementById('hbox').className='hint-box show';
+  document.getElementById('hbtn').disabled=true;
+}
+function checkAnswer(){
+  if(done)return;
+  const q=Q[cur],inp=document.getElementById(`bl-${cur}`);
+  if(!inp)return;
+  const raw=inp.value.trim();
+  if(!raw){inp.focus();return;}
+  done=true;
+  const val=raw.toLowerCase().replace(/\s+/g,' ').replace(/['"]/g,"'");
+  const isOk=q.answers.some(a=>a.toLowerCase().replace(/['"]/g,"'")===val);
+  inp.disabled=true;inp.classList.add(isOk?'ok':'ng');
+  document.getElementById('cbtn').disabled=true;
+  document.getElementById('hbtn').disabled=true;
+  if(!isOk){const l=document.getElementById(`cl-${cur}`);if(l){l.textContent='✓ '+q.correct;l.style.display='block';}}
+  if(isOk)score++;
+  answers.push({given:raw,ok:isOk});
+  const fb=document.getElementById('fb');
+  fb.className='fb show '+(isOk?'ok':'ng');
+  document.getElementById('fbico').textContent=isOk?'✓':'✗';
+  document.getElementById('fbtxt').textContent=(isOk?'Dobrze! ':'Niepoprawnie — poprawna: '+q.correct+'. ')+q.exp;
+  document.getElementById('nbtn').disabled=false;prog();
+}
+function next(){if(!done)return;cur++;cur>=Q.length?showScore():render();}
+function prog(){
+  const pct=((cur+(done?1:0))/Q.length)*100;
+  document.getElementById('pfill').style.width=Math.max(pct,2)+'%';
+  document.getElementById('plbl').textContent=`Pytanie ${Math.min(cur+1,15)} z 15`;
+  document.getElementById('psco').textContent=(done||cur>0)?`${score} / ${Math.min(cur+(done?1:0),15)}`:'';
+}
+function showScore(){
+  document.getElementById('qcard').style.display='none';
+  document.getElementById('sc').style.display='block';
+  document.getElementById('sfin').textContent=score;
+  document.getElementById('pfill').style.width='100%';
+  document.getElementById('plbl').textContent='Quiz zakończony';
+  document.getElementById('psco').textContent=`${score} / 15`;
+  const arc=document.getElementById('sarc'),pct=score/15;
+  arc.style.stroke=pct>=.8?'#4ade80':pct>=.6?'#e3b341':'#f85149';
+  setTimeout(()=>{arc.style.strokeDashoffset=351.9*(1-pct);},80);
+  const grades=[
+    [15,'🏆 Perfekcja!','Wszystkie 15 — rozumiesz statystykę w nowych kontekstach!'],
+    [13,'🥇 Świetnie!','Prawie ideał. Statystyk z Ciebie!'],
+    [11,'🥈 Bardzo dobrze!','Solidnie. Powtórz Levene + Cohen\'s d.'],
+    [9,'🥉 Dobrze!','Podstawy są. Przejrzyj komórki o testach t i chi².'],
+    [7,'📚 Połowa','Wróć do L16 i ćwicz na nowych przykładach.'],
+    [0,'💪 Czas na powtórkę','Otwórz notebook L16 i przejedź każdą komórkę!'],
+  ];
+  for(const[min,lbl,sub]of grades){if(score>=min){document.getElementById('slbl').textContent=lbl;document.getElementById('ssub').textContent=sub;break;}}
+  const dots=document.getElementById('sdots');dots.innerHTML='';
+  answers.forEach(a=>{const d=document.createElement('div');d.className='sc-dot'+(a.ok?'':' ng');dots.appendChild(d);});
+  const rv=document.getElementById('rvlist');rv.innerHTML='';
+  if(!answers.some(a=>!a.ok)){rv.innerHTML='<div style="text-align:center;color:var(--green);font-size:14px;padding:10px">🎉 Zero błędów — perfekcja!</div>';return;}
+  answers.forEach((a,i)=>{
+    if(a.ok)return;
+    const q=Q[i],d=document.createElement('div');d.className='rv-item';
+    d.innerHTML=`<div class="rv-q">Pytanie ${i+1} — ${q.tag}</div><div>Twoja: <span class="rv-wrong">"${a.given||'(brak)'}"</span> → poprawna: <span class="rv-right">${q.correct}</span></div>`;
+    rv.appendChild(d);
+  });
+}
+function restart(){
+  cur=0;score=0;answers=[];done=false;
+  document.getElementById('qcard').style.display='block';
+  document.getElementById('sc').style.display='none';
+  document.getElementById('sarc').style.strokeDashoffset='351.9';
+  render();
+}
+render();
+</script>
+</body>
+</html>
